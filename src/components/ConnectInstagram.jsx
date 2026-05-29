@@ -24,9 +24,8 @@ export default function ConnectInstagram() {
       },
     })
       .then((response) => {
-          if(response.data.success && response.data.tokens){
-            // Store googleId in localStorage
-            localStorage.setItem("googleToken", response.data.tokens);
+          if(response.data.success){
+            // Cookie is set via res.cookie from server
             if(response.data.user){
               navigate("/dashboard");
 
@@ -249,8 +248,8 @@ export default function ConnectInstagram() {
           Connect with Instagram
         </button>
 
-        {/* Skip Button */}
-        <button
+       
+        <button onClick={() => navigate("/dashboard")}
           style={{
             width: "100%",
             padding: "13px",
