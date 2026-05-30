@@ -43,7 +43,7 @@ export default function ConnectInstagram() {
   }, []);
 
     const handleInstagramConnect = async () => {
-  try {    alert("clickedaa");
+  try {    
     const response = await api.get("insta/redirectUrl");
     alert("clicked");
     console.log("Login successful:", response.data);
