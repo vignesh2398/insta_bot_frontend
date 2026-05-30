@@ -43,9 +43,9 @@ export default function ConnectInstagram() {
   }, []);
 
     const handleInstagramConnect = async () => {
-  try {
+  try {    alert("clickedaa");
     const response = await api.get("insta/redirectUrl");
-
+    alert("clicked");
     console.log("Login successful:", response.data);
 
     // Redirect to Instagram/Google OAuth URL
