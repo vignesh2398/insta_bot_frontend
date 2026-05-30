@@ -3,7 +3,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://insta-bot-1-wlkt.onrender.com",
+  baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
