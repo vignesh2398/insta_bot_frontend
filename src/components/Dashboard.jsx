@@ -1,8 +1,17 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import api from "../services/axios";
+import { useNavigate } from "react-router-dom";
 
 export default function InstagramManager() {
+    const navigate = useNavigate()
+const [authenticated, setAuthenticated] = useState(false);
+  useEffect(() => {
+  api.get("/insta/profile")
+    .then(() => setAuthenticated(true))
+    .catch(() => navigate("/"));
+}, []);
+
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [nextToken, setNextToken] = useState(null);
