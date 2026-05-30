@@ -5,9 +5,9 @@ import api from "../services/axios";
 export default function LoginPage() {
   const login=()=>{
    api.get("/auth/redirectUrl").then((response) => {
-      // redirectToGoogle(response.data.message);
+
         window.location.href = response.data.message;
-        // window.location.href = "http://localhost:3000/auth/google";
+  
     }).catch((error) => {
       console.error("Login failed:", error.response?.data || error.message);
     });

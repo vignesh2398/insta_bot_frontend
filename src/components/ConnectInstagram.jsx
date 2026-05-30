@@ -25,7 +25,6 @@ export default function ConnectInstagram() {
     })
       .then((response) => {
           if(response.data.success){
-            // Cookie is set via res.cookie from server
             if(response.data.user){
               navigate("/dashboard");
 
@@ -45,7 +44,6 @@ export default function ConnectInstagram() {
     const handleInstagramConnect = async () => {
   try {    
     const response = await api.get("insta/redirectUrl");
-    alert("clicked");
     console.log("Login successful:", response.data);
 
     // Redirect to Instagram/Google OAuth URL

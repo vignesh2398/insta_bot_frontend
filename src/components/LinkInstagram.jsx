@@ -9,7 +9,6 @@ export default function LinkInstagram() {
     const instagramUserUpdate = async () => {
       try {
             const code = searchParams.get("code");
-            console.log("Instagram callback code:", code);
                if (!code || hasCalledApi.current) return;
     hasCalledApi.current = true;
             if(code){
@@ -24,7 +23,7 @@ export default function LinkInstagram() {
     
         // const response = await api.get("/insta/userUpdate");
       } catch (error) {
-        alert("Failed to Update Instagram User");
+        alert("Failed to Update Instagram User", error.message);
         console.error("Error updating Instagram user:", error);
           navigate("/connect-instagram");
       }
