@@ -116,7 +116,7 @@ export default function InstagramManager() {
         },
       };
 
-      await api.post("/automation", payload);
+      await api.post("/insta/automation", payload);
 
       alert("Auto Reply Settings Saved Successfully");
     } catch (error) {
@@ -173,6 +173,33 @@ export default function InstagramManager() {
        return text.replace( regex, '<span class="bg-yellow-300 text-black rounded px-1">$&</span>' );
        };
 
+
+       const handleToggle = async () => {
+  const newValue = !autoReplyEnabled;
+
+  setAutoReplyEnabled(newValue);
+
+  // Call API when disabling
+  if (!newValue) {
+    try {
+      await api.post("/insta/automation", {
+        instagramPostId:
+          selectedPost?.instagramPostId || selectedPost?.id,
+        autoReply: {
+          enabled: false,
+        },
+      });
+
+
+    } catch (error) {
+      console.error(error);
+
+      // Revert UI if API fails
+      setAutoReplyEnabled(true);
+
+    }
+  }
+};
   return (
     <div className="h-screen flex bg-gradient-to-br from-fuchsia-100 via-purple-50 to-cyan-100">
       <div
@@ -364,23 +391,23 @@ export default function InstagramManager() {
                       </p>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAutoReplyEnabled(!autoReplyEnabled)
-                      }
-                      className={`relative inline-flex h-8 w-16 items-center rounded-full transition-all ${autoReplyEnabled
-                          ? "bg-gradient-to-r from-pink-500 to-purple-600"
-                          : "bg-gray-300"
-                        }`}
-                    >
-                      <span
-                        className={`inline-block h-6 w-6 rounded-full bg-white shadow transition ${autoReplyEnabled
-                            ? "translate-x-9"
-                            : "translate-x-1"
-                          }`}
-                      />
-                    </button>
+<button
+  type="button"
+  onClick={handleToggle}
+  className={`relative inline-flex h-10 w-20 items-center rounded-full transition-all duration-300 shadow-lg ${
+    autoReplyEnabled
+      ? "bg-gradient-to-r from-pink-500 to-purple-600"
+      : "bg-slate-300"
+  }`}
+>
+  <span
+    className={`absolute left-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-all duration-300 ${
+      autoReplyEnabled ? "translate-x-10" : "translate-x-0"
+    }`}
+  >
+    {autoReplyEnabled ? "✓" : ""}
+  </span>
+</button>
                   </div>
 
                   <div className="mb-6">
