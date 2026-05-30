@@ -52,7 +52,7 @@ export default function ConnectInstagram() {
     window.location.href = response.data.message;
 
   } catch (error) {
-    alert("Failed to connect Instagram. Please try again.",error.message);
+    alert("Failed to connect Instagram:");
     console.error(
       "Login failed:",
       error.response?.data || error.message
