@@ -4,14 +4,30 @@ import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 
 export default function InstagramManager() {
-    const navigate = useNavigate()
-const [authenticated, setAuthenticated] = useState(false);
-
+  const navigate = useNavigate()
+  const [posts, setPosts] = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [nextToken, setNextToken] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+  const [commentType, setCommentType] = useState("all");
+  const [keywords, setKeywords] = useState([]);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [triggerKeywords, setTriggerKeywords] = useState([]);
+  const [dmMessage, setDmMessage] = useState("");
+  const [authenticated, setAuthenticated] = useState(false);
+  const [instagramAccount, setInstagramAccount] = useState({
+    accountName: "",
+    username: "",
+    profilePicture: "",
+  });
 
   useEffect(() => {
   api.get("/insta/profile")
     .then(() => {setAuthenticated(true)
-            setInstagramAccount({
+           
+      setInstagramAccount({
         accountName:
           response.data?.accountName ||
           response.data?.username ||
@@ -22,28 +38,14 @@ const [authenticated, setAuthenticated] = useState(false);
 
 
     })
-    .catch(() => navigate("/"));
+    .catch((ee) =>{ 
+      console.log("Not authenticated", e);
+      navigate("/")});
 }, []);
 
-  const [posts, setPosts] = useState([]);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [nextToken, setNextToken] = useState(null);
 
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
 
-  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
-  const [commentType, setCommentType] = useState("all");
-  const [keywords, setKeywords] = useState([]);
-  const [keywordInput, setKeywordInput] = useState("");
-  const [triggerKeywords, setTriggerKeywords] = useState([]);
-  const [dmMessage, setDmMessage] = useState("");
 
-  const [instagramAccount, setInstagramAccount] = useState({
-    accountName: "",
-    username: "",
-    profilePicture: "",
-  });
 
   const thumbnailRef = useRef(null);
 
