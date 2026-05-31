@@ -34,7 +34,7 @@ export default function ConnectInstagram() {
       )
       .catch((error) => {
           const errorMessage = error.response?.data?.message || error.response?.data || error.message || "Failed to connect Instagram";
-          console.error("Failed to connect Instagram:", errorMessage);
+          console.log("Failed to connect Instagram:", errorMessage);
           alert(errorMessage);
           navigate("/");
       }); 
