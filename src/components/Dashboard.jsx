@@ -38,7 +38,7 @@ export default function InstagramManager() {
 
 
     })
-    .catch((ee) =>{ 
+    .catch((e) =>{ 
       console.log("Not authenticated", e);
       navigate("/")});
 }, []);
