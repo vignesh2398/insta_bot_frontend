@@ -13,6 +13,11 @@ export default function LoginPage() {
     });
    
   }
+    useEffect(() => {
+    api.get("/health")
+      .then(() => setAuthenticated(true))
+      .catch(() => navigate("/"));
+  }, []);
   return (
     <div
       style={{

@@ -6,9 +6,22 @@ import { useNavigate } from "react-router-dom";
 export default function InstagramManager() {
     const navigate = useNavigate()
 const [authenticated, setAuthenticated] = useState(false);
+
+
   useEffect(() => {
   api.get("/insta/profile")
-    .then(() => setAuthenticated(true))
+    .then(() => {setAuthenticated(true)
+            setInstagramAccount({
+        accountName:
+          response.data?.accountName ||
+          response.data?.username ||
+          "Instagram Account",
+        username: response.data?.username || "",
+        profilePicture: response.data?.profilePicture || "",
+      });
+
+
+    })
     .catch(() => navigate("/"));
 }, []);
 
@@ -52,14 +65,7 @@ const [authenticated, setAuthenticated] = useState(false);
         setSelectedPost(fetchedPosts[0]);
       }
 
-      setInstagramAccount({
-        accountName:
-          response.data?.accountName ||
-          response.data?.username ||
-          "Instagram Account",
-        username: response.data?.username || "",
-        profilePicture: response.data?.profilePicture || "",
-      });
+
 
       setNextToken(response.data?.next || null);
     } catch (err) {
