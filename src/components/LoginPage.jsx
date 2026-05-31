@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { FaGoogle, FaInstagram } from "react-icons/fa";
 import api from "../services/axios";
 
