@@ -12,6 +12,7 @@ const api = axios.create({
 
 // Response interceptor
 api.interceptors.response.use(
+  console.log("API Response Interceptor Initialized"),
   (response) => {
     return response;
   },
