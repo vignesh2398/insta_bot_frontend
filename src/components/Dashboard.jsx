@@ -82,6 +82,7 @@ export default function InstagramManager() {
     try {
       await api.post("/insta/logout");
       alert("Instagram account logged out successfully.");
+      navigate("/");
     } catch (error) {
       console.error(error);
       alert("Failed to logout Instagram account.");
