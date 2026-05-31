@@ -96,7 +96,7 @@ export default function InstagramManager() {
     if (!confirmed) return;
 
     try {
-      await api.delete("/insta/account");
+      await api.delete("/insta/removeAccount");
       alert("Instagram account removed successfully.");
     } catch (error) {
       console.error(error);
