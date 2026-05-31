@@ -25,7 +25,7 @@ export default function InstagramManager() {
 
   useEffect(() => {
   api.get("/insta/profile")
-    .then(() => {setAuthenticated(true)
+    .then((response) => {setAuthenticated(true)
            
       setInstagramAccount({
         accountName:
