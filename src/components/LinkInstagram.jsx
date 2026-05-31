@@ -24,6 +24,7 @@ export default function LinkInstagram() {
         // const response = await api.get("/insta/userUpdate");
       } catch (error) {
         alert("Failed to Update Instagram User", error.message);
+        console.log("error.messageerror.messageerror.message",error.message,"error.messageerror.message")
         console.error("Error updating Instagram user:", error);
           navigate("/connect-instagram");
       }
