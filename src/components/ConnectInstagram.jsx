@@ -50,7 +50,7 @@ export default function ConnectInstagram() {
 
   } catch (error) {
     alert( error.message );
-    console.error(
+    console.log(
       "Login failed:",
       error.response?.data || error.message
     );

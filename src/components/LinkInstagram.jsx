@@ -25,7 +25,7 @@ export default function LinkInstagram() {
       } catch (error) {
         alert("Failed to Update Instagram User", error.message);
         console.log("error.messageerror.messageerror.message",error.message,"error.messageerror.message")
-        console.error("Error updating Instagram user:", error);
+        console.log("Error updating Instagram user:", error);
           navigate("/connect-instagram");
       }
     };
