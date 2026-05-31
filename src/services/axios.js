@@ -1,6 +1,12 @@
-// src/services/axios.js
+// 
+
+
 
 import axios from "axios";
+import {
+  startLoading,
+  stopLoading,
+} from "../store/loadingStore";
 
 const api = axios.create({
   baseURL: "/api",
@@ -10,18 +16,24 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Response interceptor
+api.interceptors.request.use(
+  (config) => {
+    startLoading();
+    return config;
+  },
+  (error) => {
+    stopLoading();
+    return Promise.reject(error);
+  }
+);
+
 api.interceptors.response.use(
-  console.log("API Response Interceptor Initialized"),
   (response) => {
+    stopLoading();
     return response;
   },
   (error) => {
-    console.error(
-      "API Error:",
-      error.response?.data || error.message
-    );
-
+    stopLoading();
     return Promise.reject(error);
   }
 );
