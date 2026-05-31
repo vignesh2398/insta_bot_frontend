@@ -17,15 +17,12 @@ export default function LinkInstagram() {
                   code: code,
                 },
               });
-              console.log("Instagram connected:", response.data);
                     navigate("/dashboard");
             }
     
         // const response = await api.get("/insta/userUpdate");
       } catch (error) {
-        alert("Failed to Update Instagram User", error.message);
-        console.log("error.messageerror.messageerror.message",error.message,"error.messageerror.message")
-        console.log("Error updating Instagram user:", error);
+        alert( "Try another Instagram account. The selected Instagram account must be a Business or Creator account.", error.message);
           navigate("/connect-instagram");
       }
     };
