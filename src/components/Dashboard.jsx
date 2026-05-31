@@ -80,7 +80,7 @@ export default function InstagramManager() {
 
   const handleLogout = async () => {
     try {
-      await api.post("/insta/logout");
+      await api.get("/insta/logout");
       alert("Instagram account logged out successfully.");
       navigate("/");
     } catch (error) {
