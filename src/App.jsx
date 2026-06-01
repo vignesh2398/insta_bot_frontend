@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ConnectInstagram from "./components/ConnectInstagram";
 import DashboardPage from "./components/Dashboard";
+import Dashboardclaude from "./components/Dashboardclaude";
 import LinkInstagram from "./components/LinkInstagram";
 import LoginPage from "./components/LoginPage";
 import { Routes, Route } from "react-router-dom";
@@ -26,6 +27,8 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/connect-instagram" element={<ConnectInstagram />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboardclaude" element={< Dashboardclaude/>} />
+
         <Route path="/linkInstagram" element={<LinkInstagram />} />
       </Routes>
     </>
