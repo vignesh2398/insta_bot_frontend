@@ -26,7 +26,7 @@ const THEMES = {
     "--stat2-bg": "linear-gradient(135deg,rgba(129,52,175,0.15),rgba(81,91,212,0.1))",
     "--stat2-border": "rgba(129,52,175,0.22)",
     "--user-menu-bg": "#141420", "--user-menu-hover": "rgba(255,255,255,0.1)",
-    "--log-bg": "rgba(255,255,255,0.03)", "--ctrl-bg": "rgba(255,255,255,0.04)",
+    "--log-bg": "rgba(255,255,255,0.03)", "--ctrl-bg": "rgba(255,255,255,0.06)",
   },
   light: {
     "--bg": "#f4f3fb", "--bg2": "#ffffff",
@@ -42,7 +42,7 @@ const THEMES = {
     "--stat2-bg": "linear-gradient(135deg,rgba(129,52,175,0.10),rgba(81,91,212,0.07))",
     "--stat2-border": "rgba(129,52,175,0.18)",
     "--user-menu-bg": "#ffffff", "--user-menu-hover": "rgba(0,0,0,0.07)",
-    "--log-bg": "rgba(0,0,0,0.02)", "--ctrl-bg": "rgba(0,0,0,0.03)",
+    "--log-bg": "rgba(0,0,0,0.02)", "--ctrl-bg": "rgba(0,0,0,0.04)",
   },
 };
 
@@ -93,7 +93,7 @@ const STATIC_CSS = `
   .radio-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .radio-dot::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #dd2a7b; opacity: 0; transition: opacity 0.2s; }
   .radio-pill.selected .radio-dot::after { opacity: 1; }
-  .ig-input { width: 100%; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 12px; color: var(--text-primary); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 12px 14px; resize: none; outline: none; transition: border-color 0.2s, background 0.2s; }
+  .ig-input { width: 100%; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 12px; color: var(--text-primary); -webkit-text-fill-color: var(--text-primary); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 12px 14px; resize: none; outline: none; transition: border-color 0.2s, background 0.2s; color-scheme: inherit; }
   .ig-input:focus { border-color: #dd2a7b; background: var(--input-focus-bg); }
   .ig-input::placeholder { color: var(--text-muted); }
   .stat-chip { padding: 14px 18px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; }
@@ -112,9 +112,9 @@ const STATIC_CSS = `
   .status-dot { width: 6px; height: 6px; border-radius: 50%; }
   .status-badge.on .status-dot { background: #4ade80; }
   .status-badge.off .status-dot { background: #f87171; }
-  .ctrl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: var(--ctrl-bg); border: 1px solid var(--border); border-radius: 12px; }
-  .ctrl-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-  .ctrl-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .ctrl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; background: var(--ctrl-bg); border: 1.5px solid var(--border); border-radius: 14px; transition: border-color 0.2s, background 0.2s; } .ctrl-row:hover { border-color: rgba(221,42,123,0.35); background: var(--surface-hover); }
+  .ctrl-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .ctrl-sub { font-size: 11px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
   .log-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .log-row:last-child { border-bottom: none; }
   .log-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
@@ -131,7 +131,7 @@ const STATIC_CSS = `
   .skeleton { animation: pulse 1.5s ease infinite; background: var(--surface); border-radius: 8px; }
   @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
   .fade-up { animation: fadeUp 0.4s ease forwards; }
-  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px; display: block; }
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
 `;
 
 if (!document.getElementById("ig-static-css")) {
@@ -381,8 +381,8 @@ function SparklineSection({ analytics, dmStats }) {
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{dmStats?.replyDelay ?? 0} min</div>
           </div>
           <div style={{ background: "var(--ctrl-bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "7px 10px" }}>
-            <div style={{ fontSize: 10, color: "var(--text-secondary)", marginBottom: 2 }}>Active hours</div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{dmStats?.activeHours ?? "9am–10pm"}</div>
+            <div style={{ fontSize: 10, color: "var(--text-secondary)", marginBottom: 2 }}>Remaining today</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: capPct > 80 ? "#f87171" : "#4ade80" }}>{capTotal - capUsed} DMs left</div>
           </div>
         </div>
       </div>
@@ -428,25 +428,36 @@ function ActivityLog({ log, logLoading }) {
 /* ─── SmartControls ────────────────────────────────────────────────── */
 function SmartControls({ settings, onChange }) {
   const controls = [
-    { key: "oneDmPerUser",      label: "One DM per user",      sub: "Never message same person twice" },
-    { key: "excludeFollowers",  label: "Exclude followers",    sub: "Only DM non-followers" },
-    { key: "rotateMessages",    label: "Rotate messages",      sub: "Cycle through message variants" },
-    { key: "personalizeMessage",label: "Personalize {name}",   sub: "Insert commenter's name in DM" },
+    { key: "oneDmPerUser",       icon: "👤", label: "One DM per user",    sub: "Never message same person twice",  accent: "rgba(129,52,175,0.15)", accentBorder: "rgba(129,52,175,0.3)"  },
+    { key: "excludeFollowers",   icon: "🚫", label: "Exclude followers",  sub: "Only DM non-followers",            accent: "rgba(248,113,113,0.10)", accentBorder: "rgba(248,113,113,0.25)"},
+    { key: "rotateMessages",     icon: "🔄", label: "Rotate messages",    sub: "Cycle through message variants",   accent: "rgba(81,91,212,0.12)",   accentBorder: "rgba(81,91,212,0.28)"  },
+    { key: "personalizeMessage", icon: "✨", label: "Personalize {name}", sub: "Insert commenter's name in DM",   accent: "rgba(245,133,41,0.12)",  accentBorder: "rgba(245,133,41,0.28)" },
   ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-      {controls.map(({ key, label, sub }) => (
-        <div key={key} className="ctrl-row">
-          <div>
-            <div className="ctrl-label">{label}</div>
-            <div className="ctrl-sub">{sub}</div>
+      {controls.map(({ key, icon, label, sub, accent, accentBorder }) => {
+        const active = !!settings[key];
+        return (
+          <div key={key} className="ctrl-row"
+            style={{ background: active ? accent : "var(--ctrl-bg)", borderColor: active ? accentBorder : "var(--border)", cursor: "pointer" }}
+            onClick={() => onChange(key, !active)}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: active ? accentBorder : "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, transition: "background 0.2s" }}>
+                {icon}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div className="ctrl-label" style={{ color: active ? "var(--text-primary)" : "var(--text-secondary)" }}>{label}</div>
+                <div className="ctrl-sub">{sub}</div>
+              </div>
+            </div>
+            <MiniToggle value={active} onChange={(v) => { v !== undefined && onChange(key, v); }} />
           </div>
-          <MiniToggle value={!!settings[key]} onChange={(v) => onChange(key, v)} />
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
+
 
 /* ─── MessageVariants ──────────────────────────────────────────────── */
 function MessageVariants({ variants, onChange }) {
@@ -478,7 +489,7 @@ function MessageVariants({ variants, onChange }) {
 }
 
 /* ─── Main Component ───────────────────────────────────────────────── */
-export default function InstagramManagerclaude() {
+export default function InstagramManager() {
   const navigate = useNavigate();
   const wrapRef  = useRef(null);
   const thumbnailRef = useRef(null);
@@ -506,8 +517,6 @@ export default function InstagramManagerclaude() {
   const [smartSettings, setSmartSettings] = useState({ oneDmPerUser: true, excludeFollowers: false, rotateMessages: false, personalizeMessage: true });
   const [replyDelay, setReplyDelay]       = useState(0);
   const [dailyCap, setDailyCap]           = useState(100);
-  const [activeHoursStart, setActiveHoursStart] = useState("09:00");
-  const [activeHoursEnd, setActiveHoursEnd]     = useState("22:00");
   const [messageVariants, setMessageVariants]   = useState([""]);
 
   /* Analytics & log state */
@@ -581,8 +590,6 @@ export default function InstagramManagerclaude() {
     });
     setReplyDelay(selectedPost.replyDelay ?? 0);
     setDailyCap(selectedPost.dailyCap ?? 100);
-    setActiveHoursStart(selectedPost.activeHours?.start ?? "09:00");
-    setActiveHoursEnd(selectedPost.activeHours?.end ?? "22:00");
     setMessageVariants(selectedPost.messageVariants?.length ? selectedPost.messageVariants : [selectedPost.message || ""]);
 
     /* Fetch analytics */
@@ -595,7 +602,7 @@ export default function InstagramManagerclaude() {
 
     /* Fetch DM stats */
     api.get(`/insta/activity/stats`, { params: { mediaId } })
-      .then((r) => setDmStats({ ...r.data, replyDelay: selectedPost.replyDelay ?? 0, activeHours: `${selectedPost.activeHours?.start ?? "9am"}–${selectedPost.activeHours?.end ?? "10pm"}` }))
+      .then((r) => setDmStats({ ...r.data, replyDelay: selectedPost.replyDelay ?? 0 }))
       .catch(() => setDmStats(null));
 
     /* Fetch activity log */
@@ -660,7 +667,6 @@ export default function InstagramManagerclaude() {
           message: dmMessage,
           replyDelay,
           dailyCap,
-          activeHours: { start: activeHoursStart, end: activeHoursEnd },
           ...smartSettings,
         },
       });
@@ -827,27 +833,17 @@ export default function InstagramManagerclaude() {
                   <SmartControls settings={smartSettings} onChange={handleSmartChange} />
 
                   {/* Scheduling */}
-                  <span className="section-label">Scheduling</span>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
-                    <div>
-                      <label style={{ fontSize: 11, color: "var(--text-secondary)", display: "block", marginBottom: 5 }}>Reply delay (min)</label>
+                  <span className="section-label">⏱ Scheduling</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                    <div style={{ background: "var(--ctrl-bg)", border: "1.5px solid var(--border)", borderRadius: 14, padding: "12px 14px" }}>
+                      <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>Reply delay (min)</label>
                       <input type="number" min={0} max={60} value={replyDelay} onChange={(e) => setReplyDelay(+e.target.value)}
-                        className="ig-input" style={{ padding: "8px 12px" }} />
+                        className="ig-input" style={{ padding: "8px 12px", background: "var(--surface)", color: "var(--text-primary)", WebkitTextFillColor: "var(--text-primary)" }} />
                     </div>
-                    <div>
-                      <label style={{ fontSize: 11, color: "var(--text-secondary)", display: "block", marginBottom: 5 }}>Daily DM cap</label>
+                    <div style={{ background: "var(--ctrl-bg)", border: "1.5px solid var(--border)", borderRadius: 14, padding: "12px 14px" }}>
+                      <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>Daily DM cap</label>
                       <input type="number" min={1} max={500} value={dailyCap} onChange={(e) => setDailyCap(+e.target.value)}
-                        className="ig-input" style={{ padding: "8px 12px" }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 11, color: "var(--text-secondary)", display: "block", marginBottom: 5 }}>Active hours</label>
-                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                        <input type="time" value={activeHoursStart} onChange={(e) => setActiveHoursStart(e.target.value)}
-                          className="ig-input" style={{ padding: "8px 8px", flex: 1, fontSize: 12 }} />
-                        <span style={{ color: "var(--text-muted)", fontSize: 12 }}>–</span>
-                        <input type="time" value={activeHoursEnd} onChange={(e) => setActiveHoursEnd(e.target.value)}
-                          className="ig-input" style={{ padding: "8px 8px", flex: 1, fontSize: 12 }} />
-                      </div>
+                        className="ig-input" style={{ padding: "8px 12px", background: "var(--surface)", color: "var(--text-primary)", WebkitTextFillColor: "var(--text-primary)" }} />
                     </div>
                   </div>
 
