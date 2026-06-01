@@ -68,11 +68,6 @@ const STATIC_CSS = `
   .ig-toggle.off { background: var(--border); }
   .ig-toggle-knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; justify-content: center; font-size: 10px; }
   .ig-toggle.on .ig-toggle-knob { transform: translateX(24px); }
-  .mini-toggle { position: relative; display: inline-flex; width: 36px; height: 20px; border-radius: 10px; cursor: pointer; border: none; outline: none; flex-shrink: 0; transition: background 0.3s ease; }
-  .mini-toggle.on { background: linear-gradient(135deg,#f58529,#dd2a7b); }
-  .mini-toggle.off { background: var(--border); }
-  .mini-toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); }
-  .mini-toggle.on .mini-toggle-knob { transform: translateX(16px); }
   .user-btn { display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 5px; border-radius: 50px; background: var(--surface); border: 1px solid var(--border); color: var(--text-primary); cursor: pointer; transition: all 0.2s ease; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; }
   .user-btn:hover { background: var(--surface-hover); }
   .user-btn-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; display: block; border: 1.5px solid #dd2a7b; }
@@ -171,14 +166,6 @@ function avatarColor(str) {
   return colors[h];
 }
 
-/* ─── MiniToggle ───────────────────────────────────────────────────── */
-function MiniToggle({ value, onChange }) {
-  return (
-    <button type="button" className={`mini-toggle ${value ? "on" : "off"}`} onClick={() => onChange(!value)} aria-label="toggle">
-      <span className="mini-toggle-knob" />
-    </button>
-  );
-}
 
 /* ─── SparkBar chart ───────────────────────────────────────────────── */
 function SparkBar({ data, color }) {
@@ -426,31 +413,92 @@ function ActivityLog({ log, logLoading }) {
 }
 
 /* ─── SmartControls ────────────────────────────────────────────────── */
-function SmartControls({ settings, onChange }) {
+function SmartControls({ settings, onChange, isDark }) {
   const controls = [
-    { key: "oneDmPerUser",       icon: "👤", label: "One DM per user",    sub: "Never message same person twice",  accent: "rgba(129,52,175,0.15)", accentBorder: "rgba(129,52,175,0.3)"  },
-    { key: "excludeFollowers",   icon: "🚫", label: "Exclude followers",  sub: "Only DM non-followers",            accent: "rgba(248,113,113,0.10)", accentBorder: "rgba(248,113,113,0.25)"},
-    { key: "rotateMessages",     icon: "🔄", label: "Rotate messages",    sub: "Cycle through message variants",   accent: "rgba(81,91,212,0.12)",   accentBorder: "rgba(81,91,212,0.28)"  },
-    { key: "personalizeMessage", icon: "✨", label: "Personalize {name}", sub: "Insert commenter's name in DM",   accent: "rgba(245,133,41,0.12)",  accentBorder: "rgba(245,133,41,0.28)" },
+    { key: "oneDmPerUser",       icon: "👤", label: "One DM per user",    sub: "Never message same person twice",
+      lightColor: "#7c3aed", darkColor: "#c4b5fd",
+      activeBg:  { light: "rgba(124,58,237,0.08)",  dark: "rgba(167,139,250,0.12)" },
+      activeBdr: { light: "rgba(124,58,237,0.45)",  dark: "rgba(196,181,253,0.55)" },
+    },
+    { key: "excludeFollowers",   icon: "🚫", label: "Exclude followers",  sub: "Only DM non-followers",
+      lightColor: "#dc2626", darkColor: "#fca5a5",
+      activeBg:  { light: "rgba(220,38,38,0.08)",   dark: "rgba(248,113,113,0.12)" },
+      activeBdr: { light: "rgba(220,38,38,0.45)",   dark: "rgba(248,113,113,0.55)" },
+    },
+    { key: "rotateMessages",     icon: "🔄", label: "Rotate messages",    sub: "Cycle through message variants",
+      lightColor: "#1d4ed8", darkColor: "#93c5fd",
+      activeBg:  { light: "rgba(29,78,216,0.08)",   dark: "rgba(96,165,250,0.12)"  },
+      activeBdr: { light: "rgba(29,78,216,0.45)",   dark: "rgba(96,165,250,0.55)"  },
+    },
+    { key: "personalizeMessage", icon: "✨", label: "Personalize {name}", sub: "Insert commenter's name in DM",
+      lightColor: "#b45309", darkColor: "#fde68a",
+      activeBg:  { light: "rgba(180,83,9,0.08)",    dark: "rgba(251,191,36,0.12)"  },
+      activeBdr: { light: "rgba(180,83,9,0.45)",    dark: "rgba(251,191,36,0.55)"  },
+    },
   ];
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-      {controls.map(({ key, icon, label, sub, accent, accentBorder }) => {
+      {controls.map(({ key, icon, label, sub, lightColor, darkColor, activeBg, activeBdr }) => {
         const active = !!settings[key];
+        const accentColor  = isDark ? darkColor  : lightColor;
+        const bgColor      = active ? activeBg[isDark ? "dark" : "light"]  : "var(--ctrl-bg)";
+        const borderColor  = active ? activeBdr[isDark ? "dark" : "light"] : "var(--border)";
+        const labelColor   = active ? accentColor : "var(--text-primary)";
+        const subColor     = "var(--text-secondary)";
+
         return (
-          <div key={key} className="ctrl-row"
-            style={{ background: active ? accent : "var(--ctrl-bg)", borderColor: active ? accentBorder : "var(--border)", cursor: "pointer" }}
-            onClick={() => onChange(key, !active)}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: active ? accentBorder : "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, transition: "background 0.2s" }}>
-                {icon}
+          <div key={key}
+            onClick={() => onChange(key, !active)}
+            style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "14px 16px", borderRadius: 16, cursor: "pointer",
+              transition: "all 0.22s ease",
+              background: bgColor,
+              border: `2px solid ${borderColor}`,
+              boxShadow: active ? `0 2px 16px ${activeBg[isDark ? "dark" : "light"]}` : "none",
+              position: "relative",
+            }}>
+
+            {/* ON/OFF badge top-right */}
+            <div style={{
+              position: "absolute", top: 9, right: 12,
+              padding: "2px 7px", borderRadius: 20,
+              fontSize: 9, fontWeight: 700, letterSpacing: "0.05em",
+              background: active ? "rgba(74,222,128,0.18)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"),
+              color: active ? "#4ade80" : "var(--text-secondary)",
+              border: active ? "1px solid rgba(74,222,128,0.35)" : "1px solid var(--border)",
+              transition: "all 0.2s ease",
+            }}>
+              {active ? "ON" : "OFF"}
+            </div>
+
+            {/* Icon box */}
+            <div style={{
+              width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 19, transition: "all 0.2s ease",
+              background: active ? borderColor : (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)"),
+              border: `1.5px solid ${active ? borderColor : "var(--border)"}`,
+            }}>
+              {icon}
+            </div>
+
+            {/* Text */}
+            <div style={{ minWidth: 0, flex: 1, paddingRight: 28 }}>
+              <div style={{
+                fontSize: 13, fontWeight: 700, lineHeight: 1.3,
+                color: labelColor, transition: "color 0.2s",
+              }}>
+                {label}
               </div>
-              <div style={{ minWidth: 0 }}>
-                <div className="ctrl-label" style={{ color: active ? "var(--text-primary)" : "var(--text-secondary)" }}>{label}</div>
-                <div className="ctrl-sub">{sub}</div>
+              <div style={{
+                fontSize: 11, marginTop: 4, lineHeight: 1.4,
+                color: subColor,
+              }}>
+                {sub}
               </div>
             </div>
-            <MiniToggle value={active} onChange={(v) => { v !== undefined && onChange(key, v); }} />
           </div>
         );
       })}
@@ -515,8 +563,6 @@ export default function InstagramManager() {
 
   /* New feature state */
   const [smartSettings, setSmartSettings] = useState({ oneDmPerUser: true, excludeFollowers: false, rotateMessages: false, personalizeMessage: true });
-  const [replyDelay, setReplyDelay]       = useState(0);
-  const [dailyCap, setDailyCap]           = useState(100);
   const [messageVariants, setMessageVariants]   = useState([""]);
 
   /* Analytics & log state */
@@ -588,8 +634,6 @@ export default function InstagramManager() {
       rotateMessages:     selectedPost.rotateMessages     ?? false,
       personalizeMessage: selectedPost.personalizeMessage ?? true,
     });
-    setReplyDelay(selectedPost.replyDelay ?? 0);
-    setDailyCap(selectedPost.dailyCap ?? 100);
     setMessageVariants(selectedPost.messageVariants?.length ? selectedPost.messageVariants : [selectedPost.message || ""]);
 
     /* Fetch analytics */
@@ -665,8 +709,6 @@ export default function InstagramManager() {
           replyAll: commentType === "all",
           keywords: commentType === "specific" ? keywords : [],
           message: dmMessage,
-          replyDelay,
-          dailyCap,
           ...smartSettings,
         },
       });
@@ -830,22 +872,8 @@ export default function InstagramManager() {
 
                   {/* Smart controls */}
                   <span className="section-label">Smart Controls</span>
-                  <SmartControls settings={smartSettings} onChange={handleSmartChange} />
+                  <SmartControls settings={smartSettings} onChange={handleSmartChange} isDark={isDark} />
 
-                  {/* Scheduling */}
-                  <span className="section-label">⏱ Scheduling</span>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-                    <div style={{ background: "var(--ctrl-bg)", border: "1.5px solid var(--border)", borderRadius: 14, padding: "12px 14px" }}>
-                      <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>Reply delay (min)</label>
-                      <input type="number" min={0} max={60} value={replyDelay} onChange={(e) => setReplyDelay(+e.target.value)}
-                        className="ig-input" style={{ padding: "8px 12px", background: "var(--surface)", color: "var(--text-primary)", WebkitTextFillColor: "var(--text-primary)" }} />
-                    </div>
-                    <div style={{ background: "var(--ctrl-bg)", border: "1.5px solid var(--border)", borderRadius: 14, padding: "12px 14px" }}>
-                      <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>Daily DM cap</label>
-                      <input type="number" min={1} max={500} value={dailyCap} onChange={(e) => setDailyCap(+e.target.value)}
-                        className="ig-input" style={{ padding: "8px 12px", background: "var(--surface)", color: "var(--text-primary)", WebkitTextFillColor: "var(--text-primary)" }} />
-                    </div>
-                  </div>
 
                   {/* Message variants or single message */}
                   {smartSettings.rotateMessages ? (
