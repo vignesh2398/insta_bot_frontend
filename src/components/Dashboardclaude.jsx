@@ -442,10 +442,10 @@ function SmartControls({ settings, onChange, isDark }) {
       {controls.map(({ key, icon, label, sub, lightColor, darkColor, activeBg, activeBdr }) => {
         const active = !!settings[key];
         const accentColor  = isDark ? darkColor  : lightColor;
-        const bgColor      = active ? activeBg[isDark ? "dark" : "light"]  : "var(--ctrl-bg)";
-        const borderColor  = active ? activeBdr[isDark ? "dark" : "light"] : "var(--border)";
-        const labelColor   = active ? accentColor : "var(--text-primary)";
-        const subColor     = "var(--text-secondary)";
+        const bgColor      = active ? activeBg[isDark ? "dark" : "light"]  : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)");
+        const borderColor  = active ? activeBdr[isDark ? "dark" : "light"] : (isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)");
+        const labelColor   = active ? accentColor : (isDark ? "#f0eef8" : "#1a1828");
+        const subColor     = isDark ? "#a09fb5" : "#6b6880";
 
         return (
           <div key={key}
@@ -466,8 +466,8 @@ function SmartControls({ settings, onChange, isDark }) {
               padding: "2px 7px", borderRadius: 20,
               fontSize: 9, fontWeight: 700, letterSpacing: "0.05em",
               background: active ? "rgba(74,222,128,0.18)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"),
-              color: active ? "#4ade80" : "var(--text-secondary)",
-              border: active ? "1px solid rgba(74,222,128,0.35)" : "1px solid var(--border)",
+              color: active ? "#4ade80" : (isDark ? "#a09fb5" : "#6b6880"),
+              border: active ? "1px solid rgba(74,222,128,0.35)" : (isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.10)"),
               transition: "all 0.2s ease",
             }}>
               {active ? "ON" : "OFF"}
