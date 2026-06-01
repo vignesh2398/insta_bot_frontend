@@ -16,33 +16,27 @@ const THEMES = {
     "--bg": "#0a0a0f", "--bg2": "#0f0f1a",
     "--surface": "rgba(255,255,255,0.04)", "--surface-hover": "rgba(255,255,255,0.08)",
     "--border": "rgba(255,255,255,0.09)", "--border-accent": "rgba(255,100,130,0.35)",
-    "--text-primary": "#f0eef8", "--text-secondary": "#8b8a99", "--text-muted": "#555468",
+    "--text-primary": "#f0eef8", "--text-secondary": "#a09fb5", "--text-muted": "#6e6c80",
     "--shadow-card": "0 8px 40px rgba(0,0,0,0.55)", "--scrollbar-thumb": "rgba(255,255,255,0.12)",
     "--sidebar-bg": "rgba(15,15,26,0.9)", "--topbar-bg": "rgba(10,10,15,0.92)",
     "--input-bg": "rgba(255,255,255,0.04)", "--input-focus-bg": "rgba(221,42,123,0.05)",
-    "--orb1": "rgba(245,133,41,0.12)", "--orb2": "rgba(129,52,175,0.10)", "--orb3": "rgba(81,91,212,0.06)",
-    "--stat1-bg": "linear-gradient(135deg,rgba(245,133,41,0.15),rgba(221,42,123,0.1))",
-    "--stat1-border": "rgba(245,133,41,0.22)",
-    "--stat2-bg": "linear-gradient(135deg,rgba(129,52,175,0.15),rgba(81,91,212,0.1))",
-    "--stat2-border": "rgba(129,52,175,0.22)",
+    "--orb1": "rgba(245,133,41,0.12)", "--orb2": "rgba(129,52,175,0.10)",
     "--user-menu-bg": "#141420", "--user-menu-hover": "rgba(255,255,255,0.1)",
     "--log-bg": "rgba(255,255,255,0.03)", "--ctrl-bg": "rgba(255,255,255,0.06)",
+    "--cap-bg": "rgba(255,255,255,0.04)", "--cap-border": "rgba(255,255,255,0.09)",
   },
   light: {
     "--bg": "#f4f3fb", "--bg2": "#ffffff",
     "--surface": "rgba(255,255,255,0.75)", "--surface-hover": "rgba(255,255,255,0.95)",
     "--border": "rgba(0,0,0,0.08)", "--border-accent": "rgba(221,42,123,0.25)",
-    "--text-primary": "#1a1828", "--text-secondary": "#6b6880", "--text-muted": "#b0aec0",
+    "--text-primary": "#1a1828", "--text-secondary": "#6b6880", "--text-muted": "#9997aa",
     "--shadow-card": "0 8px 40px rgba(0,0,0,0.10)", "--scrollbar-thumb": "rgba(0,0,0,0.15)",
     "--sidebar-bg": "rgba(255,255,255,0.85)", "--topbar-bg": "rgba(255,255,255,0.92)",
     "--input-bg": "rgba(0,0,0,0.03)", "--input-focus-bg": "rgba(221,42,123,0.04)",
-    "--orb1": "rgba(245,133,41,0.10)", "--orb2": "rgba(129,52,175,0.08)", "--orb3": "rgba(81,91,212,0.05)",
-    "--stat1-bg": "linear-gradient(135deg,rgba(245,133,41,0.10),rgba(221,42,123,0.07))",
-    "--stat1-border": "rgba(245,133,41,0.18)",
-    "--stat2-bg": "linear-gradient(135deg,rgba(129,52,175,0.10),rgba(81,91,212,0.07))",
-    "--stat2-border": "rgba(129,52,175,0.18)",
+    "--orb1": "rgba(245,133,41,0.10)", "--orb2": "rgba(129,52,175,0.08)",
     "--user-menu-bg": "#ffffff", "--user-menu-hover": "rgba(0,0,0,0.07)",
     "--log-bg": "rgba(0,0,0,0.02)", "--ctrl-bg": "rgba(0,0,0,0.04)",
+    "--cap-bg": "rgba(0,0,0,0.02)", "--cap-border": "rgba(0,0,0,0.08)",
   },
 };
 
@@ -68,6 +62,11 @@ const STATIC_CSS = `
   .ig-toggle.off { background: var(--border); }
   .ig-toggle-knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; justify-content: center; font-size: 10px; }
   .ig-toggle.on .ig-toggle-knob { transform: translateX(24px); }
+
+  /* Theme toggle button — always visible in topbar */
+  .theme-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text-primary); font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0; }
+  .theme-btn:hover { background: var(--surface-hover); transform: rotate(15deg); }
+
   .user-btn { display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 5px; border-radius: 50px; background: var(--surface); border: 1px solid var(--border); color: var(--text-primary); cursor: pointer; transition: all 0.2s ease; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; }
   .user-btn:hover { background: var(--surface-hover); }
   .user-btn-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; display: block; border: 1.5px solid #dd2a7b; }
@@ -90,7 +89,7 @@ const STATIC_CSS = `
   .radio-pill.selected .radio-dot::after { opacity: 1; }
   .ig-input { width: 100%; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 12px; color: var(--text-primary); -webkit-text-fill-color: var(--text-primary); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 12px 14px; resize: none; outline: none; transition: border-color 0.2s, background 0.2s; color-scheme: inherit; }
   .ig-input:focus { border-color: #dd2a7b; background: var(--input-focus-bg); }
-  .ig-input::placeholder { color: var(--text-muted); }
+  .ig-input::placeholder { color: var(--text-muted); -webkit-text-fill-color: var(--text-muted); }
   .stat-chip { padding: 14px 18px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; }
   .stat-chip .stat-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.75; }
   .stat-chip .stat-value { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; }
@@ -107,9 +106,6 @@ const STATIC_CSS = `
   .status-dot { width: 6px; height: 6px; border-radius: 50%; }
   .status-badge.on .status-dot { background: #4ade80; }
   .status-badge.off .status-dot { background: #f87171; }
-  .ctrl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; background: var(--ctrl-bg); border: 1.5px solid var(--border); border-radius: 14px; transition: border-color 0.2s, background 0.2s; } .ctrl-row:hover { border-color: rgba(221,42,123,0.35); background: var(--surface-hover); }
-  .ctrl-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-  .ctrl-sub { font-size: 11px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
   .log-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .log-row:last-child { border-bottom: none; }
   .log-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
@@ -117,6 +113,12 @@ const STATIC_CSS = `
   .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 48px; }
   .bar-item { flex: 1; border-radius: 4px 4px 0 0; min-width: 8px; transition: opacity 0.2s; cursor: pointer; }
   .bar-item:hover { opacity: 0.75; }
+
+  /* Daily cap banner — account level */
+  .cap-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--cap-bg); border: 1px solid var(--cap-border); border-radius: 14px; flex-wrap: wrap; }
+  .cap-bar-track { flex: 1; min-width: 100px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+  .cap-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
   .sidebar-drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 40; backdrop-filter: blur(4px); }
   .sidebar-drawer { position: fixed; left: 0; top: 0; bottom: 0; width: 300px; z-index: 50; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; transform: translateX(-100%); transition: transform 0.35s cubic-bezier(.22,1,.36,1); }
   .sidebar-drawer.open { transform: translateX(0); }
@@ -166,8 +168,7 @@ function avatarColor(str) {
   return colors[h];
 }
 
-
-/* ─── SparkBar chart ───────────────────────────────────────────────── */
+/* ─── SparkBar ─────────────────────────────────────────────────────── */
 function SparkBar({ data, color }) {
   const max = Math.max(...data, 1);
   return (
@@ -179,8 +180,52 @@ function SparkBar({ data, color }) {
   );
 }
 
+/* ─── DailyCapBanner (account-level) ──────────────────────────────── */
+function DailyCapBanner({ profile, isDark }) {
+  const sentToday = profile?.dmsSentToday  ?? 0;
+  const cap       = profile?.dailyCap      ?? 100;
+  const pct       = Math.min(Math.round((sentToday / cap) * 100), 100);
+  const danger    = pct >= 80;
+  const fillColor = danger
+    ? "linear-gradient(90deg,#f87171,#ef4444)"
+    : "linear-gradient(90deg,#4ade80,#22c55e)";
+  const countColor = danger ? "#f87171" : "#4ade80";
+
+  return (
+    <div className="cap-banner">
+      {/* Label */}
+      <div style={{ flexShrink: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-secondary)" }}>
+          Account DM Cap
+        </div>
+        <div style={{ fontSize: 12, marginTop: 2, color: countColor, fontWeight: 700 }}>
+          {sentToday} / {cap} sent today
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="cap-bar-track">
+        <div className="cap-bar-fill" style={{ width: `${pct}%`, background: fillColor }} />
+      </div>
+
+      {/* Remaining */}
+      <div style={{ flexShrink: 0, textAlign: "right" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: countColor }}>{cap - sentToday}</div>
+        <div style={{ fontSize: 10, color: "var(--text-muted)" }}>remaining</div>
+      </div>
+
+      {/* Warning badge if near cap */}
+      {danger && (
+        <div style={{ padding: "3px 8px", borderRadius: 20, background: "rgba(248,113,113,0.12)", color: "#fca5a5", fontSize: 10, fontWeight: 700, border: "1px solid rgba(248,113,113,0.3)", flexShrink: 0 }}>
+          ⚠️ Near limit
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── UserButton ───────────────────────────────────────────────────── */
-function UserButton({ account, onLogout, onRemove, isDark, onThemeToggle }) {
+function UserButton({ account, onLogout, onRemove }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -210,10 +255,6 @@ function UserButton({ account, onLogout, onRemove, isDark, onThemeToggle }) {
               <div className="user-menu-handle">@{account.username}</div>
             </div>
           </div>
-          <button className="user-menu-item" onClick={() => { onThemeToggle(); setOpen(false); }}>
-            <span style={{ fontSize: 16 }}>{isDark ? "☀️" : "🌙"}</span>
-            <span>{isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
-          </button>
           <div style={{ height: 1, background: "var(--border)", margin: "2px 0" }} />
           <button className="user-menu-item" onClick={() => { onLogout(); setOpen(false); }}>
             <span style={{ fontSize: 16 }}>🚪</span><span>Logout</span>
@@ -236,7 +277,6 @@ function SidebarContent({ thumbnailRef, posts, selectedPost, setSelectedPost, lo
   });
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Filter header */}
       <div style={{ padding: "10px", borderBottom: "1px solid var(--border)", background: "linear-gradient(160deg,rgba(245,133,41,0.08),rgba(129,52,175,0.08))", flexShrink: 0, display: "flex", gap: 5 }}>
         {[
           { key: "all",     label: "All",     icon: "◉" },
@@ -271,8 +311,6 @@ function SidebarContent({ thumbnailRef, posts, selectedPost, setSelectedPost, lo
           <button onClick={onClose} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-secondary)", width: 28, height: 28, flexShrink: 0, borderRadius: "50%", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
         )}
       </div>
-
-      {/* Post grid */}
       <div ref={thumbnailRef} className="ig-scroll" style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
         {loading && posts.length === 0 ? (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -330,55 +368,29 @@ function AnalyticsSection({ analytics, analyticsLoading }) {
   );
 }
 
-/* ─── SparklineSection ─────────────────────────────────────────────── */
-function SparklineSection({ analytics, dmStats }) {
+/* ─── SparklineSection (post-level, no DM cap here) ───────────────── */
+function SparklineSection({ analytics }) {
   const activity = analytics?.weeklyActivity ?? [12, 19, 8, 27, 22, 35, 41];
-  const capUsed  = dmStats?.sentToday ?? 0;
-  const capTotal = dmStats?.dailyCap  ?? 100;
-  const capPct   = Math.min(Math.round((capUsed / capTotal) * 100), 100);
-
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-      {/* Activity sparkline */}
-      <div className="ig-card" style={{ padding: "14px 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <span className="section-label" style={{ marginBottom: 0 }}>Comment Activity</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#8b8fff" }}>↑ {analytics?.activityChange ?? 0}%</span>
-        </div>
-        <SparkBar data={activity} color="#8134af" />
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-          {["M","T","W","T","F","S","S"].map((d, i) => (
-            <span key={i} style={{ fontSize: 9, color: "var(--text-muted)", flex: 1, textAlign: "center" }}>{d}</span>
-          ))}
-        </div>
+    <div className="ig-card" style={{ padding: "14px 16px", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <span className="section-label" style={{ marginBottom: 0 }}>Comment Activity (7 days)</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#8b8fff" }}>
+          {(analytics?.activityChange ?? 0) >= 0 ? "↑" : "↓"} {Math.abs(analytics?.activityChange ?? 0)}%
+        </span>
       </div>
-
-      {/* DM cap + controls */}
-      <div className="ig-card" style={{ padding: "14px 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <span className="section-label" style={{ marginBottom: 0 }}>Daily DM Cap</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: capPct > 80 ? "#f87171" : "#4ade80" }}>{capUsed} / {capTotal}</span>
-        </div>
-        <div style={{ height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden", marginBottom: 8 }}>
-          <div style={{ width: `${capPct}%`, height: "100%", borderRadius: 3, background: capPct > 80 ? "linear-gradient(90deg,#f87171,#ef4444)" : "linear-gradient(90deg,#4ade80,#22c55e)", transition: "width 0.5s ease" }} />
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <div style={{ background: "var(--ctrl-bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "7px 10px" }}>
-            <div style={{ fontSize: 10, color: "var(--text-secondary)", marginBottom: 2 }}>Reply delay</div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{dmStats?.replyDelay ?? 0} min</div>
-          </div>
-          <div style={{ background: "var(--ctrl-bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "7px 10px" }}>
-            <div style={{ fontSize: 10, color: "var(--text-secondary)", marginBottom: 2 }}>Remaining today</div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: capPct > 80 ? "#f87171" : "#4ade80" }}>{capTotal - capUsed} DMs left</div>
-          </div>
-        </div>
+      <SparkBar data={activity} color="#8134af" />
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+        {["M","T","W","T","F","S","S"].map((d, i) => (
+          <span key={i} style={{ fontSize: 9, color: "var(--text-muted)", flex: 1, textAlign: "center" }}>{d}</span>
+        ))}
       </div>
     </div>
   );
 }
 
 /* ─── ActivityLog ──────────────────────────────────────────────────── */
-function ActivityLog({ log, logLoading }) {
+function ActivityLogSection({ log, logLoading }) {
   if (logLoading) return (
     <div className="ig-card" style={{ padding: "18px 20px", marginBottom: 20 }}>
       {Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 36, borderRadius: 8, marginBottom: 8 }} />)}
@@ -395,9 +407,7 @@ function ActivityLog({ log, logLoading }) {
       </div>
       {log.map((entry, i) => (
         <div key={i} className="log-row">
-          <div className="log-avatar" style={{ background: avatarColor(entry.username) }}>
-            {initials(entry.username)}
-          </div>
+          <div className="log-avatar" style={{ background: avatarColor(entry.username) }}>{initials(entry.username)}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>@{entry.username}</div>
             {entry.keyword && <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>triggered: <span style={{ color: "#fbbf24" }}>{entry.keyword}</span></div>}
@@ -436,68 +446,26 @@ function SmartControls({ settings, onChange, isDark }) {
       activeBdr: { light: "rgba(180,83,9,0.45)",    dark: "rgba(251,191,36,0.55)"  },
     },
   ];
-
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginBottom: 20 }}>
       {controls.map(({ key, icon, label, sub, lightColor, darkColor, activeBg, activeBdr }) => {
-        const active = !!settings[key];
-        const accentColor  = isDark ? darkColor  : lightColor;
-        const bgColor      = active ? activeBg[isDark ? "dark" : "light"]  : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)");
-        const borderColor  = active ? activeBdr[isDark ? "dark" : "light"] : (isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)");
-        const labelColor   = active ? accentColor : (isDark ? "#f0eef8" : "#1a1828");
-        const subColor     = isDark ? "#a09fb5" : "#6b6880";
-
+        const active      = !!settings[key];
+        const mode        = isDark ? "dark" : "light";
+        const accentColor = isDark ? darkColor : lightColor;
+        const bgColor     = active ? activeBg[mode]  : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)");
+        const borderColor = active ? activeBdr[mode] : (isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)");
+        const labelColor  = active ? accentColor : (isDark ? "#f0eef8" : "#1a1828");
+        const subColor    = isDark ? "#a09fb5" : "#6b6880";
         return (
-          <div key={key}
-            onClick={() => onChange(key, !active)}
-            style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "14px 16px", borderRadius: 16, cursor: "pointer",
-              transition: "all 0.22s ease",
-              background: bgColor,
-              border: `2px solid ${borderColor}`,
-              boxShadow: active ? `0 2px 16px ${activeBg[isDark ? "dark" : "light"]}` : "none",
-              position: "relative",
-            }}>
-
-            {/* ON/OFF badge top-right */}
-            <div style={{
-              position: "absolute", top: 9, right: 12,
-              padding: "2px 7px", borderRadius: 20,
-              fontSize: 9, fontWeight: 700, letterSpacing: "0.05em",
-              background: active ? "rgba(74,222,128,0.18)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"),
-              color: active ? "#4ade80" : (isDark ? "#a09fb5" : "#6b6880"),
-              border: active ? "1px solid rgba(74,222,128,0.35)" : (isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.10)"),
-              transition: "all 0.2s ease",
-            }}>
+          <div key={key} onClick={() => onChange(key, !active)}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 16, cursor: "pointer", transition: "all 0.22s ease", background: bgColor, border: `2px solid ${borderColor}`, boxShadow: active ? `0 2px 16px ${activeBg[mode]}` : "none", position: "relative" }}>
+            <div style={{ position: "absolute", top: 9, right: 12, padding: "2px 7px", borderRadius: 20, fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", background: active ? "rgba(74,222,128,0.18)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"), color: active ? "#4ade80" : (isDark ? "#a09fb5" : "#6b6880"), border: active ? "1px solid rgba(74,222,128,0.35)" : (isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.10)"), transition: "all 0.2s ease" }}>
               {active ? "ON" : "OFF"}
             </div>
-
-            {/* Icon box */}
-            <div style={{
-              width: 42, height: 42, borderRadius: 12, flexShrink: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 19, transition: "all 0.2s ease",
-              background: active ? borderColor : (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)"),
-              border: `1.5px solid ${active ? borderColor : "var(--border)"}`,
-            }}>
-              {icon}
-            </div>
-
-            {/* Text */}
+            <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, transition: "all 0.2s ease", background: active ? borderColor : (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)"), border: `1.5px solid ${active ? borderColor : "var(--border)"}` }}>{icon}</div>
             <div style={{ minWidth: 0, flex: 1, paddingRight: 28 }}>
-              <div style={{
-                fontSize: 13, fontWeight: 700, lineHeight: 1.3,
-                color: labelColor, transition: "color 0.2s",
-              }}>
-                {label}
-              </div>
-              <div style={{
-                fontSize: 11, marginTop: 4, lineHeight: 1.4,
-                color: subColor,
-              }}>
-                {sub}
-              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, color: labelColor, transition: "color 0.2s" }}>{label}</div>
+              <div style={{ fontSize: 11, marginTop: 4, lineHeight: 1.4, color: subColor }}>{sub}</div>
             </div>
           </div>
         );
@@ -506,10 +474,9 @@ function SmartControls({ settings, onChange, isDark }) {
   );
 }
 
-
 /* ─── MessageVariants ──────────────────────────────────────────────── */
 function MessageVariants({ variants, onChange }) {
-  const addVariant = () => onChange([...variants, ""]);
+  const addVariant    = () => onChange([...variants, ""]);
   const removeVariant = (i) => onChange(variants.filter((_, idx) => idx !== i));
   const updateVariant = (i, val) => { const v = [...variants]; v[i] = val; onChange(v); };
   return (
@@ -517,18 +484,14 @@ function MessageVariants({ variants, onChange }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <span className="section-label" style={{ marginBottom: 0 }}>Message Variants</span>
         {variants.length < 3 && (
-          <button onClick={addVariant} style={{ fontSize: 12, fontWeight: 600, color: "#dd2a7b", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>
-            + Add variant
-          </button>
+          <button onClick={addVariant} style={{ fontSize: 12, fontWeight: 600, color: "#dd2a7b", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>+ Add variant</button>
         )}
       </div>
       {variants.map((v, i) => (
         <div key={i} style={{ position: "relative", marginBottom: 8 }}>
-          <textarea rows={2} value={v} onChange={(e) => updateVariant(i, e.target.value)}
-            placeholder={`Variant ${i + 1}…`} className="ig-input" style={{ lineHeight: 1.5, paddingRight: 36 }} />
+          <textarea rows={2} value={v} onChange={(e) => updateVariant(i, e.target.value)} placeholder={`Variant ${i + 1}…`} className="ig-input" style={{ lineHeight: 1.5, paddingRight: 36 }} />
           {variants.length > 1 && (
-            <button onClick={() => removeVariant(i)}
-              style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 16 }}>×</button>
+            <button onClick={() => removeVariant(i)} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 16 }}>×</button>
           )}
         </div>
       ))}
@@ -538,54 +501,59 @@ function MessageVariants({ variants, onChange }) {
 
 /* ─── Main Component ───────────────────────────────────────────────── */
 export default function InstagramManager() {
-  const navigate = useNavigate();
-  const wrapRef  = useRef(null);
+  const navigate     = useNavigate();
+  const wrapRef      = useRef(null);
   const thumbnailRef = useRef(null);
 
-  /* Core state */
-  const [isDark, setIsDark]               = useState(true);
-  const [posts, setPosts]                 = useState([]);
-  const [selectedPost, setSelectedPost]   = useState(null);
-  const [nextToken, setNextToken]         = useState(null);
-  const [loading, setLoading]             = useState(false);
-  const [loadingMore, setLoadingMore]     = useState(false);
-  const [postFilter, setPostFilter]       = useState("all");
-  const [drawerOpen, setDrawerOpen]       = useState(false);
+  /* isDark: default light, overridden by profile API */
+  const [isDark, setIsDark]             = useState(false);
+  const [posts, setPosts]               = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [nextToken, setNextToken]       = useState(null);
+  const [loading, setLoading]           = useState(false);
+  const [loadingMore, setLoadingMore]   = useState(false);
+  const [postFilter, setPostFilter]     = useState("all");
+  const [drawerOpen, setDrawerOpen]     = useState(false);
   const [instagramAccount, setInstagramAccount] = useState({ accountName: "", username: "", profilePicture: "" });
 
-  /* Auto reply state */
+  /* Account-level profile (includes dailyCap, dmsSentToday, theme) */
+  const [profile, setProfile]           = useState(null);
+
+  /* Auto reply */
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
-  const [commentType, setCommentType]     = useState("all");
-  const [keywords, setKeywords]           = useState([]);
-  const [keywordInput, setKeywordInput]   = useState("");
-  const [triggerKeywords]                 = useState([]);
-  const [dmMessage, setDmMessage]         = useState("");
-
-  /* New feature state */
+  const [commentType, setCommentType]   = useState("all");
+  const [keywords, setKeywords]         = useState([]);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [triggerKeywords]               = useState([]);
+  const [dmMessage, setDmMessage]       = useState("");
   const [smartSettings, setSmartSettings] = useState({ oneDmPerUser: true, excludeFollowers: false, rotateMessages: false, personalizeMessage: true });
-  const [messageVariants, setMessageVariants]   = useState([""]);
+  const [messageVariants, setMessageVariants] = useState([""]);
 
-  /* Analytics & log state */
-  const [analytics, setAnalytics]         = useState(null);
+  /* Analytics */
+  const [analytics, setAnalytics]           = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [dmStats, setDmStats]             = useState(null);
-  const [activityLog, setActivityLog]     = useState([]);
-  const [logLoading, setLogLoading]       = useState(false);
+  const [activityLog, setActivityLog]       = useState([]);
+  const [logLoading, setLogLoading]         = useState(false);
 
-  /* Apply theme */
+  /* Apply theme CSS vars */
   useEffect(() => {
     if (wrapRef.current) applyTheme(wrapRef.current, isDark ? "dark" : "light");
   }, [isDark]);
 
-  /* Auth check */
+  /* Auth + profile — sets theme from API, defaults to light */
   useEffect(() => {
     api.get("/insta/profile")
       .then((res) => {
+        const data = res.data;
         setInstagramAccount({
-          accountName: res.data?.accountName || res.data?.username || "Instagram Account",
-          username: res.data?.username || "",
-          profilePicture: res.data?.profilePicture || "",
+          accountName:    data?.accountName || data?.username || "Instagram Account",
+          username:       data?.username    || "",
+          profilePicture: data?.profilePicture || "",
         });
+        setProfile(data);
+        // Use theme from API if provided, otherwise stay light
+        if (data?.theme === "dark") setIsDark(true);
+        else setIsDark(false);
       })
       .catch(() => navigate("/"));
   }, []);
@@ -594,7 +562,7 @@ export default function InstagramManager() {
   const fetchPosts = useCallback(async (next = null) => {
     try {
       next ? setLoadingMore(true) : setLoading(true);
-      const res = await api.get("/insta/media", { params: { next } });
+      const res     = await api.get("/insta/media", { params: { next } });
       const fetched = res.data?.posts || [];
       setPosts((prev) => (next ? [...prev, ...fetched] : fetched));
       if (!selectedPost && fetched.length > 0) setSelectedPost(fetched[0]);
@@ -617,11 +585,9 @@ export default function InstagramManager() {
     return () => el.removeEventListener("scroll", onScroll);
   }, [nextToken, loadingMore, fetchPosts]);
 
-  /* Fetch analytics + log when post changes */
+  /* Post selection → restore settings + fetch data */
   useEffect(() => {
     if (!selectedPost) return;
-
-    /* Restore automation settings from post */
     setAutoReplyEnabled(selectedPost.enabled ?? false);
     setCommentType((selectedPost.replyAll ?? true) ? "all" : "specific");
     const kw = selectedPost.keywords || [];
@@ -636,31 +602,23 @@ export default function InstagramManager() {
     });
     setMessageVariants(selectedPost.messageVariants?.length ? selectedPost.messageVariants : [selectedPost.message || ""]);
 
-    /* Fetch analytics */
     const mediaId = selectedPost.mediaId || selectedPost.instagramPostId || selectedPost.id;
+
     setAnalyticsLoading(true);
     api.get(`/insta/analytics/${mediaId}`)
       .then((r) => setAnalytics(r.data))
       .catch(() => setAnalytics(null))
       .finally(() => setAnalyticsLoading(false));
 
-    /* Fetch DM stats */
-    api.get(`/insta/activity/stats`, { params: { mediaId } })
-      .then((r) => setDmStats({ ...r.data, replyDelay: selectedPost.replyDelay ?? 0 }))
-      .catch(() => setDmStats(null));
-
-    /* Fetch activity log */
     setLogLoading(true);
     api.get(`/insta/activity`, { params: { mediaId, limit: 10 } })
       .then((r) => setActivityLog(r.data?.logs || []))
       .catch(() => setActivityLog([]))
       .finally(() => setLogLoading(false));
 
-    /* Fetch message variants */
     api.get(`/insta/automation/${mediaId}/variants`)
       .then((r) => { if (r.data?.messages?.length) setMessageVariants(r.data.messages); })
       .catch(() => {});
-
   }, [selectedPost]);
 
   /* Handlers */
@@ -668,18 +626,15 @@ export default function InstagramManager() {
     try { await api.get("/insta/logout"); navigate("/"); }
     catch (e) { console.error(e); alert("Failed to logout."); }
   };
-
   const handleRemoveAccount = async () => {
     if (!window.confirm("Remove this Instagram account?")) return;
     try { await api.delete("/insta/removeAccount"); alert("Account removed."); }
     catch (e) { console.error(e); alert("Failed to remove account."); }
   };
-
   const handleKeywordChange = (val) => {
     setKeywordInput(val);
     setKeywords(val.split(/[,\n]+/).map((w) => w.trim()).filter(Boolean));
   };
-
   const handleToggle = async () => {
     const next = !autoReplyEnabled;
     setAutoReplyEnabled(next);
@@ -692,9 +647,7 @@ export default function InstagramManager() {
       } catch (e) { console.error(e); setAutoReplyEnabled(true); }
     }
   };
-
   const handleSmartChange = (key, val) => setSmartSettings((prev) => ({ ...prev, [key]: val }));
-
   const handleSubmitAutoReply = async () => {
     try {
       const mediaId = selectedPost?.mediaId || selectedPost?.instagramPostId || selectedPost?.id;
@@ -712,14 +665,12 @@ export default function InstagramManager() {
           ...smartSettings,
         },
       });
-      /* Save variants if rotate is on */
       if (smartSettings.rotateMessages) {
         await api.post(`/insta/automation/${mediaId}/variants`, { messages: messageVariants.filter(Boolean) });
       }
       alert("Settings saved successfully");
     } catch (e) { console.error(e); alert("Failed to save settings"); }
   };
-
   const handleDuplicateSettings = async () => {
     const target = prompt("Enter comma-separated post IDs to copy settings to:");
     if (!target) return;
@@ -731,14 +682,24 @@ export default function InstagramManager() {
       alert("Settings copied successfully");
     } catch (e) { console.error(e); alert("Failed to duplicate settings"); }
   };
+  const insertToken = (token) => setDmMessage((prev) => prev + token);
 
-  const insertToken = (token) => {
-    setDmMessage((prev) => prev + token);
-  };
+  /* Theme toggle — also persist to API if you want */
+  const handleThemeToggle = () => setIsDark((v) => !v);
 
-  const initVars = Object.entries(THEMES[isDark ? "dark" : "light"]).reduce((a, [k, v]) => { a[k] = v; return a; }, {});
+  const initVars      = Object.entries(THEMES[isDark ? "dark" : "light"]).reduce((a, [k, v]) => { a[k] = v; return a; }, {});
+  const sidebarProps  = { thumbnailRef, posts, selectedPost, setSelectedPost, loadingMore, loading, postFilter, onFilterChange: setPostFilter };
 
-  const sidebarProps = { thumbnailRef, posts, selectedPost, setSelectedPost, loadingMore, loading, postFilter, onFilterChange: setPostFilter };
+  /* ─── Topbar shared content ──────────────────────────────────────── */
+  const TopbarActions = () => (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {/* Theme toggle — always visible, outside dropdown */}
+      <button className="theme-btn" onClick={handleThemeToggle} title={isDark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme">
+        {isDark ? "☀️" : "🌙"}
+      </button>
+      <UserButton account={instagramAccount} onLogout={handleLogout} onRemove={handleRemoveAccount} />
+    </div>
+  );
 
   return (
     <div ref={wrapRef} className="ig-wrap" style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", position: "relative", overflow: "hidden", ...initVars }}>
@@ -758,7 +719,7 @@ export default function InstagramManager() {
       <div className="mobile-topbar" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 30, height: 60, background: "var(--topbar-bg)", backdropFilter: "blur(16px)", borderBottom: "1px solid var(--border)", alignItems: "center", padding: "0 14px", gap: 10 }}>
         <button onClick={() => setDrawerOpen(true)} style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-primary)", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>☰</button>
         <span className="syne" style={{ fontWeight: 800, fontSize: 16, flex: 1, color: "var(--text-primary)" }}><span className="ig-grad-text">Instagram</span></span>
-        <UserButton account={instagramAccount} onLogout={handleLogout} onRemove={handleRemoveAccount} isDark={isDark} onThemeToggle={() => setIsDark((v) => !v)} />
+        <TopbarActions />
       </div>
 
       {drawerOpen && <div className="sidebar-drawer-overlay" onClick={() => setDrawerOpen(false)} />}
@@ -770,11 +731,16 @@ export default function InstagramManager() {
       <main className="ig-scroll" style={{ flex: 1, overflowY: "auto", padding: "0 24px 40px", position: "relative", zIndex: 1 }}>
         <div className="mobile-topbar" style={{ height: 60, background: "none", position: "static", backdropFilter: "none", border: "none" }} />
 
-        {/* Desktop topbar */}
+        {/* Desktop topbar row */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "16px 0 4px", maxWidth: 860, margin: "0 auto" }}>
           <div className="desktop-sidebar" style={{ display: "flex" }}>
-            <UserButton account={instagramAccount} onLogout={handleLogout} onRemove={handleRemoveAccount} isDark={isDark} onThemeToggle={() => setIsDark((v) => !v)} />
+            <TopbarActions />
           </div>
+        </div>
+
+        {/* Account-level Daily DM Cap banner — always visible */}
+        <div style={{ maxWidth: 860, margin: "0 auto 16px" }}>
+          <DailyCapBanner profile={profile} isDark={isDark} />
         </div>
 
         {selectedPost ? (
@@ -794,13 +760,8 @@ export default function InstagramManager() {
               </div>
             </div>
 
-            {/* Analytics stats */}
             <AnalyticsSection analytics={analytics} analyticsLoading={analyticsLoading} />
-
-            {/* Sparklines + DM cap */}
-            <SparklineSection analytics={analytics} dmStats={dmStats} />
-
-            {/* Caption */}
+            <SparklineSection analytics={analytics} />
             {selectedPost.caption && (
               <div className="ig-card" style={{ padding: "16px 20px", marginBottom: 20 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -810,13 +771,10 @@ export default function InstagramManager() {
                 <p style={{ color: "var(--text-primary)", lineHeight: 1.7, fontSize: 14 }}>{selectedPost.caption}</p>
               </div>
             )}
-
-            {/* Activity log */}
-            <ActivityLog log={activityLog} logLoading={logLoading} />
+            <ActivityLogSection log={activityLog} logLoading={logLoading} />
 
             {/* Auto Reply card */}
             <div className="ig-card" style={{ padding: 24, borderColor: "var(--border-accent)", marginBottom: 20 }}>
-              {/* Header */}
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
                 <div>
                   <h3 className="ig-grad-text syne" style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>🤖 Auto Reply</h3>
@@ -837,8 +795,6 @@ export default function InstagramManager() {
               {autoReplyEnabled && (
                 <>
                   <div style={{ height: 1, background: "var(--border)", marginBottom: 20 }} />
-
-                  {/* Trigger type */}
                   <span className="section-label">Trigger Condition</span>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
                     {[{ value: "all", label: "All Comments", icon: "💬" }, { value: "specific", label: "Keyword Match", icon: "🔍" }].map((opt) => (
@@ -851,7 +807,6 @@ export default function InstagramManager() {
                     ))}
                   </div>
 
-                  {/* Keywords */}
                   {commentType === "specific" && (
                     <div style={{ marginBottom: 20 }}>
                       <span className="section-label">Trigger Keywords</span>
@@ -870,12 +825,9 @@ export default function InstagramManager() {
                     </div>
                   )}
 
-                  {/* Smart controls */}
                   <span className="section-label">Smart Controls</span>
                   <SmartControls settings={smartSettings} onChange={handleSmartChange} isDark={isDark} />
 
-
-                  {/* Message variants or single message */}
                   {smartSettings.rotateMessages ? (
                     <MessageVariants variants={messageVariants} onChange={setMessageVariants} />
                   ) : (
@@ -887,7 +839,6 @@ export default function InstagramManager() {
                     </div>
                   )}
 
-                  {/* Personalization tokens */}
                   {smartSettings.personalizeMessage && (
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
                       <span style={{ fontSize: 11, color: "var(--text-secondary)", alignSelf: "center" }}>Insert:</span>
@@ -897,18 +848,11 @@ export default function InstagramManager() {
                     </div>
                   )}
 
-                  {/* Actions */}
                   <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", paddingTop: 4 }}>
-                    <button onClick={handleSubmitAutoReply} className="ig-btn-primary">
-                      <span>🚀</span><span>Save Settings</span>
-                    </button>
-                    <button onClick={handleDuplicateSettings} className="ig-btn-secondary">
-                      <span>⧉</span><span>Copy to another post</span>
-                    </button>
+                    <button onClick={handleSubmitAutoReply} className="ig-btn-primary"><span>🚀</span><span>Save Settings</span></button>
+                    <button onClick={handleDuplicateSettings} className="ig-btn-secondary"><span>⧉</span><span>Copy to another post</span></button>
                     {selectedPost.permalink && (
-                      <a href={selectedPost.permalink} target="_blank" rel="noreferrer" className="ig-btn-secondary" style={{ textDecoration: "none" }}>
-                        🔗 View on Instagram
-                      </a>
+                      <a href={selectedPost.permalink} target="_blank" rel="noreferrer" className="ig-btn-secondary" style={{ textDecoration: "none" }}>🔗 View on Instagram</a>
                     )}
                   </div>
                 </>
