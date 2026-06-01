@@ -387,8 +387,13 @@ function UserButton({ account, onLogout, onRemove, isDark, onThemeToggle }) {
 function SidebarContent({
   thumbnailRef, instagramAccount, posts, selectedPost,
   setSelectedPost, loadingMore, loading,
-  onClose, isDark, onThemeToggle,
+  onClose, isDark, onThemeToggle, postFilter,
 }) {
+  const filteredPosts = posts.filter((p) => {
+    if (postFilter === "enabled")  return p.enabled === true;
+    if (postFilter === "disabled") return !p.enabled;
+    return true;
+  });
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Profile header */}
@@ -447,14 +452,24 @@ function SidebarContent({
               <div key={i} className="skeleton" style={{ height: 88, borderRadius: 10 }} />
             ))}
           </div>
+        ) : filteredPosts.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "32px 12px", color: "var(--text-secondary)" }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>🔍</div>
+            <div style={{ fontSize: 13, fontWeight: 500 }}>No posts match this filter</div>
+          </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {posts.map((post) => (
+            {filteredPosts.map((post) => (
               <div key={post.id} className={`post-thumb ${selectedPost?.id === post.id ? "active" : ""}`}
                 onClick={() => { setSelectedPost(post); onClose?.(); }}>
                 <img src={post.image || post.mediaUrl} alt="" />
                 <div className="thumb-overlay">
-                  <div className="thumb-caption">{post.caption || "Instagram Post"}</div>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 4 }}>
+                    <div className="thumb-caption">{post.caption || "Instagram Post"}</div>
+                    {post.enabled && (
+                      <span style={{ flexShrink: 0, width: 7, height: 7, borderRadius: "50%", background: "#4ade80", boxShadow: "0 0 6px #4ade80", marginTop: 2 }} />
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -487,6 +502,7 @@ export default function InstagramManager() {
   const [dmMessage, setDmMessage] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [postFilter, setPostFilter] = useState("all");
   const [instagramAccount, setInstagramAccount] = useState({ accountName: "", username: "", profilePicture: "" });
 
   /* Apply theme vars whenever isDark changes */
@@ -595,7 +611,7 @@ export default function InstagramManager() {
 
   const sidebarProps = {
     thumbnailRef, instagramAccount, posts, selectedPost, setSelectedPost,
-    loadingMore, loading,
+    loadingMore, loading, postFilter,
     isDark, onThemeToggle: () => setIsDark((v) => !v),
   };
 
@@ -680,22 +696,56 @@ export default function InstagramManager() {
         {/* Mobile spacer */}
         <div className="mobile-topbar" style={{ height: 60, background: "none", position: "static", backdropFilter: "none", border: "none" }} />
 
-        {/* Desktop topbar strip */}
+        {/* Automation filter bar */}
         <div className="desktop-sidebar" style={{
-          display: "flex", alignItems: "center", justifyContent: "flex-end",
-          gap: 10, padding: "16px 0 0",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 12, padding: "20px 0 4px", maxWidth: 820, margin: "0 auto", width: "100%",
         }}>
-          <button className="theme-toggle" onClick={() => setIsDark((v) => !v)} title={isDark ? "Light mode" : "Dark mode"}
-            style={{ width: 38, height: 38 }}>
-            {isDark ? "☀️" : "🌙"}
-          </button>
-          <UserButton
-            account={instagramAccount}
-            onLogout={handleLogout}
-            onRemove={handleRemoveAccount}
-            isDark={isDark}
-            onThemeToggle={() => setIsDark((v) => !v)}
-          />
+          <div>
+            <h2 className="syne" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
+              Posts
+            </h2>
+            <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 3 }}>
+              {posts.length} post{posts.length !== 1 ? "s" : ""} · filter by automation status
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: 6 }}>
+            {[
+              { key: "all",      label: "All",      icon: "◉" },
+              { key: "enabled",  label: "Enabled",  icon: "✅" },
+              { key: "disabled", label: "Disabled", icon: "⏸" },
+            ].map(({ key, label, icon }) => (
+              <button
+                key={key}
+                onClick={() => setPostFilter(key)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "7px 14px", borderRadius: 50, fontSize: 13, fontWeight: 600,
+                  cursor: "pointer", transition: "all 0.2s ease",
+                  border: postFilter === key
+                    ? key === "enabled"  ? "1.5px solid rgba(34,197,94,0.5)"
+                    : key === "disabled" ? "1.5px solid rgba(248,113,113,0.4)"
+                    :                     "1.5px solid var(--border-accent)"
+                    : "1.5px solid var(--border)",
+                  background: postFilter === key
+                    ? key === "enabled"  ? "rgba(34,197,94,0.12)"
+                    : key === "disabled" ? "rgba(248,113,113,0.10)"
+                    :                     "rgba(221,42,123,0.08)"
+                    : "var(--surface)",
+                  color: postFilter === key
+                    ? key === "enabled"  ? "#4ade80"
+                    : key === "disabled" ? "#fca5a5"
+                    :                     "var(--text-primary)"
+                    : "var(--text-secondary)",
+                  boxShadow: postFilter === key ? "0 2px 12px rgba(0,0,0,0.12)" : "none",
+                }}
+              >
+                <span style={{ fontSize: 12 }}>{icon}</span>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {selectedPost ? (
