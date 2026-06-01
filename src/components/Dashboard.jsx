@@ -322,7 +322,7 @@ function initials(name) {
 }
 
 /* ─── UserButton ──────────────────────────────────────────────────── */
-function UserButton({ account, onLogout, onRemove, isDark, onThemeToggle, compact = false }) {
+function UserButton({ account, onLogout, onRemove, isDark, onThemeToggle }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -333,22 +333,21 @@ function UserButton({ account, onLogout, onRemove, isDark, onThemeToggle, compac
   }, []);
 
   return (
-    <div ref={ref} style={{ position: "relative", flex: compact ? 1 : "unset", minWidth: 0 }}>
-      <button className="user-btn" onClick={() => setOpen((v) => !v)} aria-label="User menu"
-        style={{ width: compact ? "100%" : "auto" }}>
+    <div ref={ref} style={{ position: "relative" }}>
+      <button className="user-btn" onClick={() => setOpen((v) => !v)} aria-label="User menu">
         {account.profilePicture ? (
           <img src={account.profilePicture} alt="avatar" className="user-btn-avatar" />
         ) : (
           <span className="user-btn-avatar-placeholder">{initials(account.accountName)}</span>
         )}
-        <span style={{ color: "var(--text-primary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "left" }}>
+        <span style={{ color: "var(--text-primary)", maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {account.accountName || "Account"}
         </span>
         <span className={`user-btn-chevron ${open ? "open" : ""}`}>▾</span>
       </button>
 
       {open && (
-        <div className="user-menu" style={{ left: compact ? 0 : "auto", right: compact ? "auto" : 0 }}>
+        <div className="user-menu" style={{ right: 0 }}>
           {/* Header */}
           <div className="user-menu-header">
             {account.profilePicture ? (
@@ -388,8 +387,7 @@ function UserButton({ account, onLogout, onRemove, isDark, onThemeToggle, compac
 function SidebarContent({
   thumbnailRef, instagramAccount, posts, selectedPost,
   setSelectedPost, loadingMore, loading,
-  onClose, isDark, onThemeToggle, postFilter,
-  onLogout, onRemove,
+  onClose, postFilter, onFilterChange,
 }) {
   const filteredPosts = posts.filter((p) => {
     if (postFilter === "enabled")  return p.enabled === true;
@@ -398,37 +396,56 @@ function SidebarContent({
   });
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Profile header */}
+      {/* Sidebar filter header */}
       <div style={{
-        padding: "16px 14px",
+        padding: "12px 10px",
         borderBottom: "1px solid var(--border)",
-        background: "linear-gradient(160deg,rgba(245,133,41,0.10),rgba(129,52,175,0.10))",
+        background: "linear-gradient(160deg,rgba(245,133,41,0.08),rgba(129,52,175,0.08))",
         flexShrink: 0,
+        display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap",
       }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          {/* UserButton — dropdown has theme toggle + logout + remove */}
-          <UserButton
-            account={instagramAccount}
-            onLogout={onLogout}
-            onRemove={onRemove}
-            isDark={isDark}
-            onThemeToggle={onThemeToggle}
-            compact
-          />
-          {onClose && (
-            <button onClick={onClose} style={{
-              background: "var(--surface)", border: "1px solid var(--border)",
-              color: "var(--text-secondary)", width: 30, height: 30, flexShrink: 0,
-              borderRadius: "50%", cursor: "pointer", fontSize: 16,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>×</button>
-          )}
-        </div>
-      </div>
-
-      {/* Posts label */}
-      <div style={{ padding: "12px 16px 8px", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-secondary)", flexShrink: 0 }}>
-        Posts
+        {[
+          { key: "all",      label: "All",      icon: "◉" },
+          { key: "enabled",  label: "Running",  icon: "🟢" },
+          { key: "disabled", label: "Paused",   icon: "⏸" },
+        ].map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => onFilterChange(key)}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              padding: "5px 10px", borderRadius: 50, fontSize: 11, fontWeight: 600,
+              cursor: "pointer", transition: "all 0.2s ease", flex: 1,
+              justifyContent: "center",
+              border: postFilter === key
+                ? key === "enabled"  ? "1.5px solid rgba(34,197,94,0.5)"
+                : key === "disabled" ? "1.5px solid rgba(248,113,113,0.4)"
+                :                     "1.5px solid var(--border-accent)"
+                : "1.5px solid var(--border)",
+              background: postFilter === key
+                ? key === "enabled"  ? "rgba(34,197,94,0.12)"
+                : key === "disabled" ? "rgba(248,113,113,0.10)"
+                :                     "rgba(221,42,123,0.08)"
+                : "var(--surface)",
+              color: postFilter === key
+                ? key === "enabled"  ? "#4ade80"
+                : key === "disabled" ? "#fca5a5"
+                :                     "var(--text-primary)"
+                : "var(--text-secondary)",
+            }}
+          >
+            <span style={{ fontSize: 10 }}>{icon}</span>
+            {label}
+          </button>
+        ))}
+        {onClose && (
+          <button onClick={onClose} style={{
+            background: "var(--surface)", border: "1px solid var(--border)",
+            color: "var(--text-secondary)", width: 28, height: 28, flexShrink: 0,
+            borderRadius: "50%", cursor: "pointer", fontSize: 15,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>×</button>
+        )}
       </div>
 
       {/* Grid */}
@@ -599,8 +616,7 @@ export default function InstagramManager() {
   const sidebarProps = {
     thumbnailRef, instagramAccount, posts, selectedPost, setSelectedPost,
     loadingMore, loading, postFilter,
-    onLogout: handleLogout, onRemove: handleRemoveAccount,
-    isDark, onThemeToggle: () => setIsDark((v) => !v),
+    onFilterChange: setPostFilter,
   };
 
   /* Initial theme tokens applied inline so first paint is correct */
@@ -679,51 +695,12 @@ export default function InstagramManager() {
         {/* Mobile spacer */}
         <div className="mobile-topbar" style={{ height: 60, background: "none", position: "static", backdropFilter: "none", border: "none" }} />
 
-        {/* Main top bar — filters left · user dropdown right */}
+        {/* Main top bar — user dropdown right only */}
         <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: 12, padding: "20px 0 8px", maxWidth: 820, margin: "0 auto", width: "100%",
+          display: "flex", alignItems: "center", justifyContent: "flex-end",
+          padding: "14px 0 8px", maxWidth: 820, margin: "0 auto", width: "100%",
         }}>
-          {/* Filter pills — left */}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {[
-              { key: "all",      label: "All",      icon: "◉" },
-              { key: "enabled",  label: "Enabled",  icon: "🟢" },
-              { key: "disabled", label: "Disabled", icon: "⏸" },
-            ].map(({ key, label, icon }) => (
-              <button
-                key={key}
-                onClick={() => setPostFilter(key)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 5,
-                  padding: "7px 14px", borderRadius: 50, fontSize: 13, fontWeight: 600,
-                  cursor: "pointer", transition: "all 0.2s ease",
-                  border: postFilter === key
-                    ? key === "enabled"  ? "1.5px solid rgba(34,197,94,0.5)"
-                    : key === "disabled" ? "1.5px solid rgba(248,113,113,0.4)"
-                    :                     "1.5px solid var(--border-accent)"
-                    : "1.5px solid var(--border)",
-                  background: postFilter === key
-                    ? key === "enabled"  ? "rgba(34,197,94,0.12)"
-                    : key === "disabled" ? "rgba(248,113,113,0.10)"
-                    :                     "rgba(221,42,123,0.08)"
-                    : "var(--surface)",
-                  color: postFilter === key
-                    ? key === "enabled"  ? "#4ade80"
-                    : key === "disabled" ? "#fca5a5"
-                    :                     "var(--text-primary)"
-                    : "var(--text-secondary)",
-                  boxShadow: postFilter === key ? "0 2px 12px rgba(0,0,0,0.10)" : "none",
-                }}
-              >
-                <span style={{ fontSize: 11 }}>{icon}</span>
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* User dropdown — right (desktop only) */}
-          <div className="desktop-sidebar" style={{ display: "flex", flexShrink: 0 }}>
+          <div className="desktop-sidebar" style={{ display: "flex" }}>
             <UserButton
               account={instagramAccount}
               onLogout={handleLogout}
