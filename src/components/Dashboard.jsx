@@ -387,8 +387,7 @@ function UserButton({ account, onLogout, onRemove, isDark, onThemeToggle }) {
 function SidebarContent({
   thumbnailRef, instagramAccount, posts, selectedPost,
   setSelectedPost, loadingMore, loading,
-  handleLogout, handleRemoveAccount, onClose,
-  isDark, onThemeToggle,
+  onClose, isDark, onThemeToggle,
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -420,7 +419,6 @@ function SidebarContent({
           </div>
 
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {/* Theme toggle inside sidebar */}
             <button className="theme-toggle" onClick={onThemeToggle} title={isDark ? "Light mode" : "Dark mode"}>
               {isDark ? "☀️" : "🌙"}
             </button>
@@ -433,27 +431,6 @@ function SidebarContent({
               }}>×</button>
             )}
           </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={handleLogout} style={{
-            flex: 1, padding: "8px 0", borderRadius: 10,
-            background: "var(--surface)", border: "1px solid var(--border)",
-            color: "var(--text-primary)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.2s",
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.background = "var(--surface-hover)")}
-          onMouseOut={(e) => (e.currentTarget.style.background = "var(--surface)")}>
-            Logout
-          </button>
-          <button onClick={handleRemoveAccount} style={{
-            flex: 1, padding: "8px 0", borderRadius: 10,
-            background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)",
-            color: "#fca5a5", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.2s",
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.2)")}
-          onMouseOut={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.1)")}>
-            Remove
-          </button>
         </div>
       </div>
 
@@ -618,7 +595,7 @@ export default function InstagramManager() {
 
   const sidebarProps = {
     thumbnailRef, instagramAccount, posts, selectedPost, setSelectedPost,
-    loadingMore, loading, handleLogout, handleRemoveAccount,
+    loadingMore, loading,
     isDark, onThemeToggle: () => setIsDark((v) => !v),
   };
 
