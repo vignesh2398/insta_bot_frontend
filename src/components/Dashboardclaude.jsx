@@ -792,18 +792,44 @@ export default function InstagramManager() {
             {/* Hero */}
             <div style={{ borderRadius: 24, overflow: "hidden", position: "relative", marginBottom: 20, boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
               <img src={selectedPost.image || selectedPost.mediaUrl} alt="" style={{ width: "100%", maxHeight: 380, objectFit: "cover", display: "block" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,rgba(0,0,0,0.78) 0%,rgba(0,0,0,0.15) 40%,transparent 70%)" }} />
-              <div style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
+              {/* Gradient: stronger at bottom to ensure stat row is always legible */}
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.35) 45%,transparent 72%)" }} />
+
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 20px 20px" }}>
+                {/* Account pill + title */}
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 20, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)", marginBottom: 8 }}>
                   <span style={{ fontSize: 14 }}>📸</span>
                   <span style={{ fontSize: 13, color: "#fff", fontWeight: 500 }}>@{selectedPost.username || instagramAccount.username}</span>
                 </div>
-                <h2 className="syne" style={{ color: "#fff", fontSize: "clamp(18px,4vw,26px)", fontWeight: 800, lineHeight: 1.2 }}>Instagram Post</h2>
-                {selectedPost.daysAgo && <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, marginTop: 4 }}>{selectedPost.daysAgo}</p>}
+                <h2 className="syne" style={{ color: "#fff", fontSize: "clamp(16px,3.5vw,22px)", fontWeight: 800, lineHeight: 1.2, marginBottom: selectedPost.daysAgo ? 2 : 12 }}>Instagram Post</h2>
+                {selectedPost.daysAgo && <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, marginBottom: 14 }}>{selectedPost.daysAgo}</p>}
+
+                {/* Stat chips row — always on solid dark base, never floating above page bg */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
+                  {analyticsLoading
+                    ? Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} style={{ height: 56, borderRadius: 12, background: "rgba(255,255,255,0.08)", animation: "pulse 1.5s ease infinite" }} />
+                      ))
+                    : [
+                        { label: "Comments",   value: analytics?.comments          ?? 0,    color: "#f58529", border: "rgba(245,133,41,0.4)"  },
+                        { label: "DMs Sent",   value: analytics?.dmsSent           ?? 0,    color: "#8b8fff", border: "rgba(139,143,255,0.4)" },
+                        { label: "Conversion", value: `${analytics?.conversionRate ?? 0}%`, color: "#4ade80", border: "rgba(74,222,128,0.4)"  },
+                        { label: "Reach",      value: analytics?.reach             ?? 0,    color: "#fbbf24", border: "rgba(251,191,36,0.4)"  },
+                      ].map((s) => (
+                        <div key={s.label} style={{
+                          padding: "10px 12px", borderRadius: 12,
+                          background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)",
+                          border: `1px solid ${s.border}`,
+                          display: "flex", flexDirection: "column", gap: 3,
+                        }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: s.color }}>{s.label}</span>
+                          <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{s.value}</span>
+                        </div>
+                      ))
+                  }
+                </div>
               </div>
             </div>
-
-            <AnalyticsSection analytics={analytics} analyticsLoading={analyticsLoading} />
             <SparklineSection analytics={analytics} />
             {selectedPost.caption && (
               <div className="ig-card" style={{ padding: "16px 20px", marginBottom: 20 }}>
