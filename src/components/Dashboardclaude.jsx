@@ -63,7 +63,6 @@ const STATIC_CSS = `
   .ig-toggle-knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; justify-content: center; font-size: 10px; }
   .ig-toggle.on .ig-toggle-knob { transform: translateX(24px); }
 
-  /* Theme toggle button — always visible in topbar */
   .theme-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text-primary); font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0; }
   .theme-btn:hover { background: var(--surface-hover); transform: rotate(15deg); }
 
@@ -114,10 +113,15 @@ const STATIC_CSS = `
   .bar-item { flex: 1; border-radius: 4px 4px 0 0; min-width: 8px; transition: opacity 0.2s; cursor: pointer; }
   .bar-item:hover { opacity: 0.75; }
 
-  /* Daily cap banner — account level */
   .cap-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--cap-bg); border: 1px solid var(--cap-border); border-radius: 14px; flex-wrap: wrap; }
   .cap-bar-track { flex: 1; min-width: 100px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
   .cap-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
+  /* Follow-to-DM hint box */
+  .follow-hint { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-radius: 12px; background: rgba(15,110,86,0.08); border: 1px solid rgba(15,110,86,0.25); margin-bottom: 20px; }
+  .follow-hint-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .follow-hint-body { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+  .follow-hint-body strong { color: var(--text-primary); font-weight: 600; }
 
   .sidebar-drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 40; backdrop-filter: blur(4px); }
   .sidebar-drawer { position: fixed; left: 0; top: 0; bottom: 0; width: 300px; z-index: 50; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; transform: translateX(-100%); transition: transform 0.35s cubic-bezier(.22,1,.36,1); }
@@ -180,10 +184,10 @@ function SparkBar({ data, color }) {
   );
 }
 
-/* ─── DailyCapBanner (account-level) ──────────────────────────────── */
-function DailyCapBanner({ profile, isDark }) {
-  const sentToday = profile?.dmsSentToday  ?? 0;
-  const cap       = profile?.dailyCap      ?? 100;
+/* ─── DailyCapBanner ───────────────────────────────────────────────── */
+function DailyCapBanner({ profile }) {
+  const sentToday = profile?.dmsSentToday ?? 0;
+  const cap       = profile?.dailyCap     ?? 100;
   const pct       = Math.min(Math.round((sentToday / cap) * 100), 100);
   const danger    = pct >= 80;
   const fillColor = danger
@@ -193,7 +197,6 @@ function DailyCapBanner({ profile, isDark }) {
 
   return (
     <div className="cap-banner">
-      {/* Label */}
       <div style={{ flexShrink: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-secondary)" }}>
           Account DM Cap
@@ -202,19 +205,13 @@ function DailyCapBanner({ profile, isDark }) {
           {sentToday} / {cap} sent today
         </div>
       </div>
-
-      {/* Progress bar */}
       <div className="cap-bar-track">
         <div className="cap-bar-fill" style={{ width: `${pct}%`, background: fillColor }} />
       </div>
-
-      {/* Remaining */}
       <div style={{ flexShrink: 0, textAlign: "right" }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: countColor }}>{cap - sentToday}</div>
         <div style={{ fontSize: 10, color: "var(--text-muted)" }}>remaining</div>
       </div>
-
-      {/* Warning badge if near cap */}
       {danger && (
         <div style={{ padding: "3px 8px", borderRadius: 20, background: "rgba(248,113,113,0.12)", color: "#fca5a5", fontSize: 10, fontWeight: 700, border: "1px solid rgba(248,113,113,0.3)", flexShrink: 0 }}>
           ⚠️ Near limit
@@ -368,7 +365,7 @@ function AnalyticsSection({ analytics, analyticsLoading }) {
   );
 }
 
-/* ─── SparklineSection (post-level, no DM cap here) ───────────────── */
+/* ─── SparklineSection ─────────────────────────────────────────────── */
 function SparklineSection({ analytics }) {
   const activity = analytics?.weeklyActivity ?? [12, 19, 8, 27, 22, 35, 41];
   return (
@@ -422,30 +419,63 @@ function ActivityLogSection({ log, logLoading }) {
   );
 }
 
+/* ─── FollowToDmHint ───────────────────────────────────────────────── */
+function FollowToDmHint({ followReplyTemplate, onChangeTemplate }) {
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div className="follow-hint">
+        <span className="follow-hint-icon">👥</span>
+        <div className="follow-hint-body">
+          <strong>How it works:</strong> When someone comments, the bot replies publicly asking them to follow your account.
+          Once they follow, the DM is sent automatically via a follow-event webhook.
+        </div>
+      </div>
+      <span className="section-label">Public reply template</span>
+      <textarea
+        rows={2}
+        value={followReplyTemplate}
+        onChange={(e) => onChangeTemplate(e.target.value)}
+        placeholder="Hey! Follow our page and we'll send you all the details in your DMs 📩"
+        className="ig-input"
+        style={{ lineHeight: 1.5 }}
+      />
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>
+        This comment is posted publicly in reply to the commenter. Use <span style={{ color: "#fbbf24" }}>{"{name}"}</span> to personalise it.
+      </div>
+    </div>
+  );
+}
+
 /* ─── SmartControls ────────────────────────────────────────────────── */
 function SmartControls({ settings, onChange, isDark }) {
   const controls = [
-    { key: "oneDmPerUser",       icon: "👤", label: "One DM per user",    sub: "Never message same person twice",
+    {
+      key: "oneDmPerUser", icon: "👤", label: "One DM per user", sub: "Never message same person twice",
       lightColor: "#7c3aed", darkColor: "#c4b5fd",
       activeBg:  { light: "rgba(124,58,237,0.08)",  dark: "rgba(167,139,250,0.12)" },
       activeBdr: { light: "rgba(124,58,237,0.45)",  dark: "rgba(196,181,253,0.55)" },
     },
-    { key: "excludeFollowers",   icon: "🚫", label: "Exclude followers",  sub: "Only DM non-followers",
-      lightColor: "#dc2626", darkColor: "#fca5a5",
-      activeBg:  { light: "rgba(220,38,38,0.08)",   dark: "rgba(248,113,113,0.12)" },
-      activeBdr: { light: "rgba(220,38,38,0.45)",   dark: "rgba(248,113,113,0.55)" },
+    {
+      // ── CHANGED: excludeFollowers → followToDm ──────────────────────
+      key: "followToDm", icon: "👥", label: "Follow to get DM", sub: "Ask to follow first, DM after they do",
+      lightColor: "#0F6E56", darkColor: "#5DCAA5",
+      activeBg:  { light: "rgba(15,110,86,0.08)",   dark: "rgba(93,202,165,0.12)" },
+      activeBdr: { light: "rgba(15,110,86,0.45)",   dark: "rgba(93,202,165,0.55)" },
     },
-    { key: "rotateMessages",     icon: "🔄", label: "Rotate messages",    sub: "Cycle through message variants",
+    {
+      key: "rotateMessages", icon: "🔄", label: "Rotate messages", sub: "Cycle through message variants",
       lightColor: "#1d4ed8", darkColor: "#93c5fd",
       activeBg:  { light: "rgba(29,78,216,0.08)",   dark: "rgba(96,165,250,0.12)"  },
       activeBdr: { light: "rgba(29,78,216,0.45)",   dark: "rgba(96,165,250,0.55)"  },
     },
-    { key: "personalizeMessage", icon: "✨", label: "Personalize {name}", sub: "Insert commenter's name in DM",
+    {
+      key: "personalizeMessage", icon: "✨", label: "Personalize {name}", sub: "Insert commenter's name in DM",
       lightColor: "#b45309", darkColor: "#fde68a",
       activeBg:  { light: "rgba(180,83,9,0.08)",    dark: "rgba(251,191,36,0.12)"  },
       activeBdr: { light: "rgba(180,83,9,0.45)",    dark: "rgba(251,191,36,0.55)"  },
     },
   ];
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginBottom: 20 }}>
       {controls.map(({ key, icon, label, sub, lightColor, darkColor, activeBg, activeBdr }) => {
@@ -505,7 +535,6 @@ export default function InstagramManager() {
   const wrapRef      = useRef(null);
   const thumbnailRef = useRef(null);
 
-  /* isDark: default light, overridden by profile API */
   const [isDark, setIsDark]             = useState(false);
   const [posts, setPosts]               = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -516,20 +545,30 @@ export default function InstagramManager() {
   const [drawerOpen, setDrawerOpen]     = useState(false);
   const [instagramAccount, setInstagramAccount] = useState({ accountName: "", username: "", profilePicture: "" });
 
-  /* Account-level profile (includes dailyCap, dmsSentToday, theme) */
-  const [profile, setProfile]           = useState(null);
+  const [profile, setProfile] = useState(null);
 
-  /* Auto reply */
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
   const [commentType, setCommentType]   = useState("all");
   const [keywords, setKeywords]         = useState([]);
   const [keywordInput, setKeywordInput] = useState("");
   const [triggerKeywords]               = useState([]);
   const [dmMessage, setDmMessage]       = useState("");
-  const [smartSettings, setSmartSettings] = useState({ oneDmPerUser: true, excludeFollowers: false, rotateMessages: false, personalizeMessage: true });
+
+  // ── followToDm replaces excludeFollowers ──────────────────────────
+  const [smartSettings, setSmartSettings] = useState({
+    oneDmPerUser:       true,
+    followToDm:         false,
+    rotateMessages:     false,
+    personalizeMessage: true,
+  });
+
+  // Template for the public "please follow us" comment reply
+  const [followReplyTemplate, setFollowReplyTemplate] = useState(
+    "Hey {name}! Follow our page and we'll send you all the details in your DMs 📩"
+  );
+
   const [messageVariants, setMessageVariants] = useState([""]);
 
-  /* Analytics */
   const [analytics, setAnalytics]           = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [activityLog, setActivityLog]       = useState([]);
@@ -540,7 +579,7 @@ export default function InstagramManager() {
     if (wrapRef.current) applyTheme(wrapRef.current, isDark ? "dark" : "light");
   }, [isDark]);
 
-  /* Auth + profile — sets theme from API, defaults to light */
+  /* Auth + profile */
   useEffect(() => {
     api.get("/insta/profile")
       .then((res) => {
@@ -551,7 +590,6 @@ export default function InstagramManager() {
           profilePicture: data?.profilePicture || "",
         });
         setProfile(data);
-        // Use theme from API if provided, otherwise stay light
         if (data?.theme === "dark") setIsDark(true);
         else setIsDark(false);
       })
@@ -596,10 +634,14 @@ export default function InstagramManager() {
     setDmMessage(selectedPost.message || "");
     setSmartSettings({
       oneDmPerUser:       selectedPost.oneDmPerUser       ?? true,
-      excludeFollowers:   selectedPost.excludeFollowers   ?? false,
+      followToDm:         selectedPost.followToDm         ?? false,
       rotateMessages:     selectedPost.rotateMessages     ?? false,
       personalizeMessage: selectedPost.personalizeMessage ?? true,
     });
+    setFollowReplyTemplate(
+      selectedPost.followReplyTemplate ||
+      "Hey {name}! Follow our page and we'll send you all the details in your DMs 📩"
+    );
     setMessageVariants(selectedPost.messageVariants?.length ? selectedPost.messageVariants : [selectedPost.message || ""]);
 
     const mediaId = selectedPost.mediaId || selectedPost.instagramPostId || selectedPost.id;
@@ -648,6 +690,7 @@ export default function InstagramManager() {
     }
   };
   const handleSmartChange = (key, val) => setSmartSettings((prev) => ({ ...prev, [key]: val }));
+
   const handleSubmitAutoReply = async () => {
     try {
       const mediaId = selectedPost?.mediaId || selectedPost?.instagramPostId || selectedPost?.id;
@@ -663,6 +706,8 @@ export default function InstagramManager() {
           keywords: commentType === "specific" ? keywords : [],
           message: dmMessage,
           ...smartSettings,
+          // Include the follow-reply template when followToDm is on
+          ...(smartSettings.followToDm ? { followReplyTemplate } : {}),
         },
       });
       if (smartSettings.rotateMessages) {
@@ -671,6 +716,7 @@ export default function InstagramManager() {
       alert("Settings saved successfully");
     } catch (e) { console.error(e); alert("Failed to save settings"); }
   };
+
   const handleDuplicateSettings = async () => {
     const target = prompt("Enter comma-separated post IDs to copy settings to:");
     if (!target) return;
@@ -682,18 +728,15 @@ export default function InstagramManager() {
       alert("Settings copied successfully");
     } catch (e) { console.error(e); alert("Failed to duplicate settings"); }
   };
-  const insertToken = (token) => setDmMessage((prev) => prev + token);
 
-  /* Theme toggle — also persist to API if you want */
+  const insertToken = (token) => setDmMessage((prev) => prev + token);
   const handleThemeToggle = () => setIsDark((v) => !v);
 
-  const initVars      = Object.entries(THEMES[isDark ? "dark" : "light"]).reduce((a, [k, v]) => { a[k] = v; return a; }, {});
-  const sidebarProps  = { thumbnailRef, posts, selectedPost, setSelectedPost, loadingMore, loading, postFilter, onFilterChange: setPostFilter };
+  const initVars     = Object.entries(THEMES[isDark ? "dark" : "light"]).reduce((a, [k, v]) => { a[k] = v; return a; }, {});
+  const sidebarProps = { thumbnailRef, posts, selectedPost, setSelectedPost, loadingMore, loading, postFilter, onFilterChange: setPostFilter };
 
-  /* ─── Topbar shared content ──────────────────────────────────────── */
   const TopbarActions = () => (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      {/* Theme toggle — always visible, outside dropdown */}
       <button className="theme-btn" onClick={handleThemeToggle} title={isDark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme">
         {isDark ? "☀️" : "🌙"}
       </button>
@@ -738,9 +781,9 @@ export default function InstagramManager() {
           </div>
         </div>
 
-        {/* Account-level Daily DM Cap banner — always visible */}
+        {/* Account-level Daily DM Cap banner */}
         <div style={{ maxWidth: 860, margin: "0 auto 16px" }}>
-          <DailyCapBanner profile={profile} isDark={isDark} />
+          <DailyCapBanner profile={profile} />
         </div>
 
         {selectedPost ? (
@@ -828,13 +871,27 @@ export default function InstagramManager() {
                   <span className="section-label">Smart Controls</span>
                   <SmartControls settings={smartSettings} onChange={handleSmartChange} isDark={isDark} />
 
+                  {/* ── Follow-to-DM template (shown only when followToDm is ON) ── */}
+                  {smartSettings.followToDm && (
+                    <FollowToDmHint
+                      followReplyTemplate={followReplyTemplate}
+                      onChangeTemplate={setFollowReplyTemplate}
+                    />
+                  )}
+
                   {smartSettings.rotateMessages ? (
                     <MessageVariants variants={messageVariants} onChange={setMessageVariants} />
                   ) : (
                     <div style={{ marginBottom: 16 }}>
-                      <span className="section-label">DM Auto Reply Message</span>
+                      <span className="section-label">
+                        {smartSettings.followToDm ? "DM Message (sent after they follow)" : "DM Auto Reply Message"}
+                      </span>
                       <textarea rows={4} value={dmMessage} onChange={(e) => setDmMessage(e.target.value)}
-                        placeholder={`Write an automated DM for @${selectedPost.username || instagramAccount.username} followers…`}
+                        placeholder={
+                          smartSettings.followToDm
+                            ? `Write the DM to send once @${selectedPost.username || instagramAccount.username} followers follow your page…`
+                            : `Write an automated DM for @${selectedPost.username || instagramAccount.username} followers…`
+                        }
                         className="ig-input" style={{ lineHeight: 1.6 }} />
                     </div>
                   )}
