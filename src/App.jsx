@@ -6,6 +6,7 @@ import LinkInstagram from "./components/LinkInstagram";
 import LoginPage from "./components/LoginPage";
 import { Routes, Route } from "react-router-dom";
 import { subscribeLoading } from "./store/loadingStore";
+import PricingPage from "./components/PricingPage";
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -28,6 +29,7 @@ function App() {
         <Route path="/connect-instagram" element={<ConnectInstagram />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/dashboardclaude" element={< Dashboardclaude/>} />
+        <Route path="/pricing" element={<PricingPage />} />
 
         <Route path="/linkInstagram" element={<LinkInstagram />} />
       </Routes>
