@@ -106,11 +106,32 @@ const STATIC_CSS = `
   .status-badge.on .status-dot { background: #4ade80; }
   .status-badge.off .status-dot { background: #f87171; }
 
-  /* ── Optimized Activity Log rows ── */
-  .log-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  /* ── Activity Log — table style ── */
+  .log-table-hdr { display: grid; grid-template-columns: 20px 140px 68px 1fr 54px 24px; align-items: center; gap: 8px; padding: 5px 14px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+  .log-col-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+  .log-row { display: grid; grid-template-columns: 20px 140px 68px 1fr 54px 24px; align-items: center; gap: 8px; padding: 4px 14px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
   .log-row:last-child { border-bottom: none; }
-  .log-avatar { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; flex-shrink: 0; }
-  .log-sent-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 9px; }
+  .log-row:hover { background: rgba(255,255,255,0.03); }
+  .log-avatar { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .log-uname { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-kw-pill { font-size: 10px; padding: 1px 7px; border-radius: 10px; background: rgba(245,133,41,0.12); color: #fbbf24; border: 1px solid rgba(245,133,41,0.25); font-weight: 600; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .log-msg-preview { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; text-align: right; }
+  .log-status-dot { width: 7px; height: 7px; border-radius: 50%; margin: 0 auto; }
+  .log-dot-sent { background: rgba(74,222,128,0.4); border: 1.5px solid #4ade80; }
+  .log-dot-fail { background: rgba(248,113,113,0.4); border: 1.5px solid #f87171; }
+  .log-filter-row { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); flex-wrap: wrap; }
+  .log-f-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .log-f-btn.active { background: rgba(221,42,123,0.08); color: var(--text-primary); border-color: rgba(221,42,123,0.4); }
+  .log-search { margin-left: auto; display: flex; align-items: center; gap: 5px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 3px 9px; }
+  .log-search input { border: none; background: transparent; font-size: 11px; color: var(--text-primary); outline: none; width: 130px; font-family: 'DM Sans', sans-serif; }
+  .log-search input::placeholder { color: var(--text-muted); }
+  .log-footer { display: flex; align-items: center; justify-content: space-between; padding: 7px 14px; border-top: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+  .log-pg-info { font-size: 11px; color: var(--text-muted); }
+  .log-pg-btns { display: flex; gap: 4px; }
+  .log-pg-btn { font-size: 11px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+  .log-pg-btn:disabled { opacity: 0.35; cursor: default; }
+  .log-pg-btn.cur { background: rgba(129,52,175,0.2); color: #c4b5fd; border-color: rgba(129,52,175,0.4); }
 
   .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 48px; }
   .bar-item { flex: 1; border-radius: 4px 4px 0 0; min-width: 8px; transition: opacity 0.2s; cursor: pointer; }
@@ -388,8 +409,14 @@ function SparklineSection({ analytics }) {
   );
 }
 
-/* ─── ActivityLog — OPTIMIZED ──────────────────────────────────────── */
+/* ─── ActivityLog — paginated table ───────────────────────────────── */
+const LOG_PER_PAGE = 10;
+
 function ActivityLogSection({ log, logLoading }) {
+  const [logFilter, setLogFilter] = useState("all");
+  const [logSearch, setLogSearch] = useState("");
+  const [logPage,   setLogPage]   = useState(0);
+
   if (logLoading) return (
     <div className="ig-card" style={{ padding: "14px 16px", marginBottom: 20 }}>
       {Array.from({ length: 3 }).map((_, i) => (
@@ -398,39 +425,115 @@ function ActivityLogSection({ log, logLoading }) {
     </div>
   );
   if (!log?.length) return null;
+
+  const q = logSearch.toLowerCase();
+  const filtered = log.filter(e => {
+    if (logFilter === "sent"   && e.status !== "sent")   return false;
+    if (logFilter === "failed" && e.status !== "failed") return false;
+    if (q && !e.username?.toLowerCase().includes(q) && !e.keyword?.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const sentCount = filtered.filter(e => e.status === "sent").length;
+  const failCount = filtered.filter(e => e.status === "failed").length;
+  const pages     = Math.max(1, Math.ceil(filtered.length / LOG_PER_PAGE));
+  const safePage  = Math.min(logPage, pages - 1);
+  const slice     = filtered.slice(safePage * LOG_PER_PAGE, safePage * LOG_PER_PAGE + LOG_PER_PAGE);
+
+  const handleFilter = (f) => { setLogFilter(f); setLogPage(0); };
+  const handleSearch = (v) => { setLogSearch(v); setLogPage(0); };
+
+  const pageNums = (() => {
+    const total = pages; const cur = safePage;
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i);
+    const start = Math.max(0, Math.min(cur - 2, total - 5));
+    return Array.from({ length: 5 }, (_, i) => start + i);
+  })();
+
   return (
-    <div className="ig-card" style={{ padding: "14px 16px", marginBottom: 20 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
+    <div className="ig-card" style={{ padding: 0, marginBottom: 20, overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
+        <h3 className="syne" style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 7 }}>
           📋 Activity Log
         </h3>
-        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-          {log.filter(l => l.status === "sent").length} sent · {log.filter(l => l.status === "failed").length} failed
-        </span>
-      </div>
-      {log.map((entry, i) => (
-        <div key={i} className="log-row">
-          <div className="log-avatar" style={{ background: avatarColor(entry.username) }}>
-            {initials(entry.username)}
-          </div>
-          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              @{entry.username}
-            </span>
-            {entry.keyword && (
-              <span style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-                · <span style={{ color: "#fbbf24" }}>{entry.keyword}</span>
-              </span>
-            )}
-          </div>
-          <span style={{ fontSize: 10, color: "var(--text-muted)", flexShrink: 0 }}>{entry.timeAgo}</span>
-          <div className="log-sent-icon" style={{ background: entry.status === "sent" ? "rgba(34,197,94,0.15)" : "rgba(248,113,113,0.15)" }}>
-            <span style={{ color: entry.status === "sent" ? "#4ade80" : "#f87171" }}>
-              {entry.status === "sent" ? "✓" : "✕"}
-            </span>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, background: "rgba(34,197,94,0.12)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.25)", fontWeight: 600 }}>
+            {sentCount} sent
+          </span>
+          <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, background: "rgba(248,113,113,0.10)", color: "#f87171", border: "1px solid rgba(248,113,113,0.25)", fontWeight: 600 }}>
+            {failCount} failed
+          </span>
         </div>
-      ))}
+      </div>
+
+      {/* Filter + search */}
+      <div className="log-filter-row">
+        {["all", "sent", "failed"].map(f => (
+          <button key={f} className={`log-f-btn${logFilter === f ? " active" : ""}`} onClick={() => handleFilter(f)}>
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+        <div className="log-search">
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>🔍</span>
+          <input
+            type="text"
+            placeholder="Search user or keyword…"
+            value={logSearch}
+            onChange={e => handleSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Column headers */}
+      <div className="log-table-hdr">
+        <span></span>
+        <span className="log-col-lbl">User</span>
+        <span className="log-col-lbl">Keyword</span>
+        <span className="log-col-lbl">Message</span>
+        <span className="log-col-lbl" style={{ textAlign: "right" }}>Time</span>
+        <span className="log-col-lbl" style={{ textAlign: "center" }}>✓</span>
+      </div>
+
+      {/* Rows */}
+      {slice.length === 0 ? (
+        <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>No entries match</div>
+      ) : (
+        slice.map((entry, i) => (
+          <div key={i} className="log-row">
+            <div className="log-avatar" style={{ background: avatarColor(entry.username) }}>
+              {initials(entry.username)}
+            </div>
+            <span className="log-uname">@{entry.username}</span>
+            <span>
+              {entry.keyword
+                ? <span className="log-kw-pill">{entry.keyword}</span>
+                : <span style={{ color: "var(--text-muted)", fontSize: 11 }}>—</span>}
+            </span>
+            <span className="log-msg-preview">{entry.message || "DM sent"}</span>
+            <span className="log-time">{entry.timeAgo}</span>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <div className={`log-status-dot ${entry.status === "sent" ? "log-dot-sent" : "log-dot-fail"}`} />
+            </div>
+          </div>
+        ))
+      )}
+
+      {/* Footer / pagination */}
+      <div className="log-footer">
+        <span className="log-pg-info">
+          {filtered.length > 0
+            ? `${safePage * LOG_PER_PAGE + 1}–${Math.min(safePage * LOG_PER_PAGE + LOG_PER_PAGE, filtered.length)} of ${filtered.length}`
+            : "0 entries"}
+        </span>
+        <div className="log-pg-btns">
+          <button className="log-pg-btn" onClick={() => setLogPage(p => p - 1)} disabled={safePage === 0}>‹</button>
+          {pageNums.map(p => (
+            <button key={p} className={`log-pg-btn${p === safePage ? " cur" : ""}`} onClick={() => setLogPage(p)}>{p + 1}</button>
+          ))}
+          <button className="log-pg-btn" onClick={() => setLogPage(p => p + 1)} disabled={safePage >= pages - 1}>›</button>
+        </div>
+      </div>
     </div>
   );
 }
