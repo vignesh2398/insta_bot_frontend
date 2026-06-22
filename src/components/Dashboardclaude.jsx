@@ -105,10 +105,13 @@ const STATIC_CSS = `
   .status-dot { width: 6px; height: 6px; border-radius: 50%; }
   .status-badge.on .status-dot { background: #4ade80; }
   .status-badge.off .status-dot { background: #f87171; }
-  .log-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+
+  /* ── Optimized Activity Log rows ── */
+  .log-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); }
   .log-row:last-child { border-bottom: none; }
-  .log-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
-  .log-sent-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; }
+  .log-avatar { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .log-sent-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 9px; }
+
   .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 48px; }
   .bar-item { flex: 1; border-radius: 4px 4px 0 0; min-width: 8px; transition: opacity 0.2s; cursor: pointer; }
   .bar-item:hover { opacity: 0.75; }
@@ -117,7 +120,6 @@ const STATIC_CSS = `
   .cap-bar-track { flex: 1; min-width: 100px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
   .cap-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
 
-  /* Follow-to-DM hint box */
   .follow-hint { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-radius: 12px; background: rgba(15,110,86,0.08); border: 1px solid rgba(15,110,86,0.25); margin-bottom: 20px; }
   .follow-hint-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
   .follow-hint-body { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
@@ -386,32 +388,46 @@ function SparklineSection({ analytics }) {
   );
 }
 
-/* ─── ActivityLog ──────────────────────────────────────────────────── */
+/* ─── ActivityLog — OPTIMIZED ──────────────────────────────────────── */
 function ActivityLogSection({ log, logLoading }) {
   if (logLoading) return (
-    <div className="ig-card" style={{ padding: "18px 20px", marginBottom: 20 }}>
-      {Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 36, borderRadius: 8, marginBottom: 8 }} />)}
+    <div className="ig-card" style={{ padding: "14px 16px", marginBottom: 20 }}>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="skeleton" style={{ height: 24, borderRadius: 6, marginBottom: 6 }} />
+      ))}
     </div>
   );
   if (!log?.length) return null;
   return (
-    <div className="ig-card" style={{ padding: "18px 20px", marginBottom: 20 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <h3 className="syne" style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>📋 Activity Log</h3>
+    <div className="ig-card" style={{ padding: "14px 16px", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <h3 className="syne" style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
+          📋 Activity Log
+        </h3>
         <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
           {log.filter(l => l.status === "sent").length} sent · {log.filter(l => l.status === "failed").length} failed
         </span>
       </div>
       {log.map((entry, i) => (
         <div key={i} className="log-row">
-          <div className="log-avatar" style={{ background: avatarColor(entry.username) }}>{initials(entry.username)}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>@{entry.username}</div>
-            {entry.keyword && <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>triggered: <span style={{ color: "#fbbf24" }}>{entry.keyword}</span></div>}
+          <div className="log-avatar" style={{ background: avatarColor(entry.username) }}>
+            {initials(entry.username)}
           </div>
-          <span style={{ fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>{entry.timeAgo}</span>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              @{entry.username}
+            </span>
+            {entry.keyword && (
+              <span style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+                · <span style={{ color: "#fbbf24" }}>{entry.keyword}</span>
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: 10, color: "var(--text-muted)", flexShrink: 0 }}>{entry.timeAgo}</span>
           <div className="log-sent-icon" style={{ background: entry.status === "sent" ? "rgba(34,197,94,0.15)" : "rgba(248,113,113,0.15)" }}>
-            <span style={{ color: entry.status === "sent" ? "#4ade80" : "#f87171" }}>{entry.status === "sent" ? "✓" : "✕"}</span>
+            <span style={{ color: entry.status === "sent" ? "#4ade80" : "#f87171" }}>
+              {entry.status === "sent" ? "✓" : "✕"}
+            </span>
           </div>
         </div>
       ))}
@@ -456,7 +472,6 @@ function SmartControls({ settings, onChange, isDark }) {
       activeBdr: { light: "rgba(124,58,237,0.45)",  dark: "rgba(196,181,253,0.55)" },
     },
     {
-      // ── CHANGED: excludeFollowers → followToDm ──────────────────────
       key: "followToDm", icon: "👥", label: "Follow to get DM", sub: "Ask to follow first, DM after they do",
       lightColor: "#0F6E56", darkColor: "#5DCAA5",
       activeBg:  { light: "rgba(15,110,86,0.08)",   dark: "rgba(93,202,165,0.12)" },
@@ -554,7 +569,6 @@ export default function InstagramManager() {
   const [triggerKeywords]               = useState([]);
   const [dmMessage, setDmMessage]       = useState("");
 
-  // ── followToDm replaces excludeFollowers ──────────────────────────
   const [smartSettings, setSmartSettings] = useState({
     oneDmPerUser:       true,
     followToDm:         false,
@@ -562,7 +576,6 @@ export default function InstagramManager() {
     personalizeMessage: true,
   });
 
-  // Template for the public "please follow us" comment reply
   const [followReplyTemplate, setFollowReplyTemplate] = useState(
     "Hey {name}! Follow our page and we'll send you all the details in your DMs 📩"
   );
@@ -574,12 +587,10 @@ export default function InstagramManager() {
   const [activityLog, setActivityLog]       = useState([]);
   const [logLoading, setLogLoading]         = useState(false);
 
-  /* Apply theme CSS vars */
   useEffect(() => {
     if (wrapRef.current) applyTheme(wrapRef.current, isDark ? "dark" : "light");
   }, [isDark]);
 
-  /* Auth + profile */
   useEffect(() => {
     api.get("/insta/profile")
       .then((res) => {
@@ -596,7 +607,6 @@ export default function InstagramManager() {
       .catch(() => navigate("/"));
   }, []);
 
-  /* Fetch posts */
   const fetchPosts = useCallback(async (next = null) => {
     try {
       next ? setLoadingMore(true) : setLoading(true);
@@ -611,7 +621,6 @@ export default function InstagramManager() {
 
   useEffect(() => { fetchPosts(); }, []);
 
-  /* Infinite scroll */
   useEffect(() => {
     const el = thumbnailRef.current;
     if (!el) return;
@@ -623,7 +632,6 @@ export default function InstagramManager() {
     return () => el.removeEventListener("scroll", onScroll);
   }, [nextToken, loadingMore, fetchPosts]);
 
-  /* Post selection → restore settings + fetch data */
   useEffect(() => {
     if (!selectedPost) return;
     setAutoReplyEnabled(selectedPost.enabled ?? false);
@@ -663,7 +671,6 @@ export default function InstagramManager() {
       .catch(() => {});
   }, [selectedPost]);
 
-  /* Handlers */
   const handleLogout = async () => {
     try { await api.get("/insta/logout"); navigate("/"); }
     catch (e) { console.error(e); alert("Failed to logout."); }
@@ -706,7 +713,6 @@ export default function InstagramManager() {
           keywords: commentType === "specific" ? keywords : [],
           message: dmMessage,
           ...smartSettings,
-          // Include the follow-reply template when followToDm is on
           ...(smartSettings.followToDm ? { followReplyTemplate } : {}),
         },
       });
@@ -792,11 +798,9 @@ export default function InstagramManager() {
             {/* Hero */}
             <div style={{ borderRadius: 24, overflow: "hidden", position: "relative", marginBottom: 20, boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
               <img src={selectedPost.image || selectedPost.mediaUrl} alt="" style={{ width: "100%", maxHeight: 380, objectFit: "cover", display: "block" }} />
-              {/* Gradient: stronger at bottom to ensure stat row is always legible */}
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.35) 45%,transparent 72%)" }} />
 
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 20px 20px" }}>
-                {/* Account pill + title */}
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 20, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)", marginBottom: 8 }}>
                   <span style={{ fontSize: 14 }}>📸</span>
                   <span style={{ fontSize: 13, color: "#fff", fontWeight: 500 }}>@{selectedPost.username || instagramAccount.username}</span>
@@ -804,7 +808,6 @@ export default function InstagramManager() {
                 <h2 className="syne" style={{ color: "#fff", fontSize: "clamp(16px,3.5vw,22px)", fontWeight: 800, lineHeight: 1.2, marginBottom: selectedPost.daysAgo ? 2 : 12 }}>Instagram Post</h2>
                 {selectedPost.daysAgo && <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, marginBottom: 14 }}>{selectedPost.daysAgo}</p>}
 
-                {/* Stat chips row — always on solid dark base, never floating above page bg */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
                   {analyticsLoading
                     ? Array.from({ length: 4 }).map((_, i) => (
@@ -830,7 +833,9 @@ export default function InstagramManager() {
                 </div>
               </div>
             </div>
+
             <SparklineSection analytics={analytics} />
+
             {selectedPost.caption && (
               <div className="ig-card" style={{ padding: "16px 20px", marginBottom: 20 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -840,6 +845,7 @@ export default function InstagramManager() {
                 <p style={{ color: "var(--text-primary)", lineHeight: 1.7, fontSize: 14 }}>{selectedPost.caption}</p>
               </div>
             )}
+
             <ActivityLogSection log={activityLog} logLoading={logLoading} />
 
             {/* Auto Reply card */}
@@ -897,7 +903,6 @@ export default function InstagramManager() {
                   <span className="section-label">Smart Controls</span>
                   <SmartControls settings={smartSettings} onChange={handleSmartChange} isDark={isDark} />
 
-                  {/* ── Follow-to-DM template (shown only when followToDm is ON) ── */}
                   {smartSettings.followToDm && (
                     <FollowToDmHint
                       followReplyTemplate={followReplyTemplate}
