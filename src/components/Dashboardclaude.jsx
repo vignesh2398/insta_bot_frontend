@@ -72,6 +72,25 @@ function avatarColor(str) {
   return colors[h];
 }
 
+function normalizeSubscriptionTier(profile) {
+  const value = profile?.subscription ?? profile?.subscriptionType ?? profile?.plan ?? profile?.subscriptionPlan ?? profile?.package ?? "";
+  if (typeof value === "string" && value.trim()) {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "starter") return "starter";
+    if (normalized === "grow") return "grow";
+    if (normalized === "free") return "free";
+  }
+  if (profile?.isSubscribed || profile?.subscriptionActive) return "grow";
+  return "free";
+}
+
+function canAccessSmartFeature(featureKey, subscriptionTier) {
+  if (featureKey === "oneDmPerUser" || featureKey === "followToDm") {
+    return subscriptionTier === "starter" || subscriptionTier === "grow";
+  }
+  return subscriptionTier === "grow";
+}
+
 /* ─── SparkBar ─────────────────────────────────────────────────────── */
 function SparkBar({ data, color }) {
   const max = Math.max(...data, 1);
@@ -306,7 +325,7 @@ function FollowToDmHint({ followReplyTemplate, onChangeTemplate }) {
 }
 
 /* ─── SmartControls ────────────────────────────────────────────────── */
-function SmartControls({ settings, onChange, isDark, isSubscribed, onUpgradeClick }) {
+function SmartControls({ settings, onChange, isDark, subscriptionTier, onUpgradeClick }) {
   const controls = [
     {
       key: "oneDmPerUser", icon: "👤", label: "One DM per user", sub: "Never message same person twice",
@@ -336,7 +355,7 @@ function SmartControls({ settings, onChange, isDark, isSubscribed, onUpgradeClic
 
   return (
     <div>
-      {!isSubscribed && (
+      {subscriptionTier === "free" && (
         <div
           onClick={onUpgradeClick}
           style={{
@@ -348,7 +367,7 @@ function SmartControls({ settings, onChange, isDark, isSubscribed, onUpgradeClic
           }}
         >
           <span style={{ fontSize: 15 }}>🔒</span>
-          <span>Smart Controls are a Pro feature — tap to upgrade and unlock them</span>
+          <span>Upgrade to unlock Starter or Grow features for smarter automation.</span>
         </div>
       )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginBottom: 20 }}>
@@ -356,7 +375,7 @@ function SmartControls({ settings, onChange, isDark, isSubscribed, onUpgradeClic
           const active      = !!settings[key];
           const mode        = isDark ? "dark" : "light";
           const accentColor = isDark ? darkColor : lightColor;
-          const locked      = !isSubscribed;
+          const locked      = !canAccessSmartFeature(key, subscriptionTier);
           const bgColor     = locked
             ? (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)")
             : active ? activeBg[mode]  : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)");
@@ -455,7 +474,8 @@ export default function InstagramManager() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   // ── Subscription status (drives Smart Controls + DM cap upgrade gating) ──
-  const isSubscribed = profile?.isSubscribed ?? profile?.subscriptionActive ?? false;
+  const subscriptionTier = normalizeSubscriptionTier(profile);
+  const isSubscribed = subscriptionTier !== "free";
   const handleUpgradeClick = () => navigate("/subscription");
 
   useEffect(() => {
@@ -562,7 +582,7 @@ export default function InstagramManager() {
     }
   };
   const handleSmartChange = (key, val) => {
-    if (!isSubscribed) { handleUpgradeClick(); return; }
+    if (!canAccessSmartFeature(key, subscriptionTier)) { handleUpgradeClick(); return; }
     setSmartSettings((prev) => ({ ...prev, [key]: val }));
   };
 
@@ -765,7 +785,7 @@ export default function InstagramManager() {
                   )}
 
                   <span className="section-label">Smart Controls</span>
-                  <SmartControls settings={smartSettings} onChange={handleSmartChange} isDark={isDark} isSubscribed={isSubscribed} onUpgradeClick={handleUpgradeClick} />
+                  <SmartControls settings={smartSettings} onChange={handleSmartChange} isDark={isDark} subscriptionTier={subscriptionTier} onUpgradeClick={handleUpgradeClick} />
 
                   {smartSettings.followToDm && (
                     <FollowToDmHint
