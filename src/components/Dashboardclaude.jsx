@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
+// import "./Dashboardclaude.css";
 
-/* ─── Google Fonts (same as dashboard) ─────────────────────────────── */
+/* ─── Google Fonts ─────────────────────────────────────────────────── */
 if (!document.getElementById("ig-fonts")) {
   const l = document.createElement("link");
   l.id = "ig-fonts"; l.rel = "stylesheet";
@@ -10,260 +11,472 @@ if (!document.getElementById("ig-fonts")) {
   document.head.appendChild(l);
 }
 
-/* ─── Theme tokens (kept identical to InstagramManager so both pages match) ─ */
+/* ─── Theme tokens ─────────────────────────────────────────────────── */
 const THEMES = {
   dark: {
     "--bg": "#0a0a0f", "--bg2": "#0f0f1a",
     "--surface": "rgba(255,255,255,0.04)", "--surface-hover": "rgba(255,255,255,0.08)",
     "--border": "rgba(255,255,255,0.09)", "--border-accent": "rgba(255,100,130,0.35)",
     "--text-primary": "#f0eef8", "--text-secondary": "#a09fb5", "--text-muted": "#6e6c80",
-    "--shadow-card": "0 8px 40px rgba(0,0,0,0.55)",
+    "--shadow-card": "0 8px 40px rgba(0,0,0,0.55)", "--scrollbar-thumb": "rgba(255,255,255,0.12)",
+    "--sidebar-bg": "rgba(15,15,26,0.9)", "--topbar-bg": "rgba(10,10,15,0.92)",
+    "--input-bg": "rgba(255,255,255,0.04)", "--input-focus-bg": "rgba(221,42,123,0.05)",
     "--orb1": "rgba(245,133,41,0.12)", "--orb2": "rgba(129,52,175,0.10)",
-    "--card-bg": "rgba(255,255,255,0.03)", "--card-bg-featured": "rgba(221,42,123,0.06)",
+    "--user-menu-bg": "#141420", "--user-menu-hover": "rgba(255,255,255,0.1)",
+    "--log-bg": "rgba(255,255,255,0.03)", "--ctrl-bg": "rgba(255,255,255,0.06)",
+    "--cap-bg": "rgba(255,255,255,0.04)", "--cap-border": "rgba(255,255,255,0.09)",
   },
   light: {
     "--bg": "#f4f3fb", "--bg2": "#ffffff",
     "--surface": "rgba(255,255,255,0.75)", "--surface-hover": "rgba(255,255,255,0.95)",
     "--border": "rgba(0,0,0,0.08)", "--border-accent": "rgba(221,42,123,0.25)",
     "--text-primary": "#1a1828", "--text-secondary": "#6b6880", "--text-muted": "#9997aa",
-    "--shadow-card": "0 8px 40px rgba(0,0,0,0.10)",
+    "--shadow-card": "0 8px 40px rgba(0,0,0,0.10)", "--scrollbar-thumb": "rgba(0,0,0,0.15)",
+    "--sidebar-bg": "rgba(255,255,255,0.85)", "--topbar-bg": "rgba(255,255,255,0.92)",
+    "--input-bg": "rgba(0,0,0,0.03)", "--input-focus-bg": "rgba(221,42,123,0.04)",
     "--orb1": "rgba(245,133,41,0.10)", "--orb2": "rgba(129,52,175,0.08)",
-    "--card-bg": "rgba(255,255,255,0.6)", "--card-bg-featured": "rgba(221,42,123,0.05)",
+    "--user-menu-bg": "#ffffff", "--user-menu-hover": "rgba(0,0,0,0.07)",
+    "--log-bg": "rgba(0,0,0,0.02)", "--ctrl-bg": "rgba(0,0,0,0.04)",
+    "--cap-bg": "rgba(0,0,0,0.02)", "--cap-border": "rgba(0,0,0,0.08)",
   },
 };
+
+/* ─── Apply theme ──────────────────────────────────────────────────── */
 function applyTheme(el, mode) {
   Object.entries(THEMES[mode]).forEach(([k, v]) => el.style.setProperty(k, v));
 }
 
-/* ─── Plan + FAQ + comparison data ─────────────────────────────────── */
-/* Mirrors the plans.json config. Move to a `/insta/plans` endpoint later
-   if pricing needs to change without a redeploy. */
-const PLANS_DATA = {
-  plans: [
-    { id: "free", name: "Free", tagline: "Get started with automation, no card needed.", monthlyPrice: 0, annualPrice: 0, dmCap: "50 DMs / day", badge: { label: "Forever free", icon: "🆓" },
-      features: [
-        { text: "50 automated DMs per day", included: true, highlight: true },
-        { text: "1 Instagram account", included: true },
-        { text: "Keyword trigger automation", included: true },
-        { text: "Follow-to-DM flow", included: false },
-        { text: "Message rotation", included: false },
-        { text: "Priority support", included: false },
-      ], cta: "Get started free" },
-    { id: "starter", name: "Starter", tagline: "For creators growing their audience.", monthlyPrice: 19, annualPrice: 15, dmCap: "200 DMs / day", badge: null,
-      features: [
-        { text: "200 automated DMs per day", included: true, highlight: true },
-        { text: "1 Instagram account", included: true },
-        { text: "Keyword trigger automation", included: true },
-        { text: "Follow-to-DM flow", included: true },
-        { text: "Message rotation", included: false },
-        { text: "Priority support", included: false },
-      ], cta: "Start Starter" },
-    { id: "growth", name: "Growth", tagline: "For brands ready to scale engagement.", monthlyPrice: 49, annualPrice: 39, dmCap: "500 DMs / day", badge: { label: "Most popular", icon: "🔥" }, featured: true,
-      features: [
-        { text: "500 automated DMs per day", included: true, highlight: true },
-        { text: "3 Instagram accounts", included: true },
-        { text: "Keyword trigger automation", included: true },
-        { text: "Follow-to-DM flow", included: true },
-        { text: "Message rotation", included: true },
-        { text: "Priority support", included: false },
-      ], cta: "Start Growth" },
-    { id: "pro", name: "Pro", tagline: "Unlimited power for serious businesses.", monthlyPrice: 99, annualPrice: 79, dmCap: "Unlimited DMs", badge: { label: "Best value", icon: "⚡" },
-      features: [
-        { text: "Unlimited automated DMs", included: true, highlight: true },
-        { text: "Unlimited accounts", included: true },
-        { text: "Keyword trigger automation", included: true },
-        { text: "Full activity log", included: true },
-        { text: "Follow-to-DM flow", included: true },
-        { text: "Message rotation", included: true },
-        { text: "Priority support", included: true },
-      ], cta: "Go Pro" },
-  ],
-  faqs: [
-    { q: "Can I upgrade or downgrade anytime?", a: "Yes — changes take effect at the start of your next billing cycle. If you upgrade mid-cycle, you'll only pay the prorated difference." },
-    { q: "What happens when I hit my daily DM cap?", a: "Automation pauses for the rest of that day and resumes automatically at midnight UTC. You'll see a warning in the dashboard when you're at 80% of your limit." },
-    { q: "Do unused DMs roll over?", a: "No — the cap resets daily. It's designed to keep sending patterns within Instagram's own guidelines." },
-    { q: "Is there a free trial on paid plans?", a: "Starter and Growth both include a 7-day free trial, no card required. Pro requires a card upfront but can be cancelled anytime in the first 14 days for a full refund." },
-    { q: "What payment methods do you accept?", a: "All major credit and debit cards via Stripe. Indian users can also pay via UPI and net banking." },
-  ],
-  compareRows: [
-    { feature: "Daily DM limit", free: "50", starter: "200", growth: "500", pro: "Unlimited" },
-    { feature: "Instagram accounts", free: "1", starter: "1", growth: "3", pro: "Unlimited" },
-    { feature: "Keyword triggers", free: true, starter: true, growth: true, pro: true },
-    { feature: "Follow-to-DM flow", free: false, starter: true, growth: true, pro: true },
-    { feature: "Message rotation", free: false, starter: false, growth: true, pro: true },
-    { feature: "Analytics dashboard", free: false, starter: false, growth: true, pro: true },
-    { feature: "Priority support", free: false, starter: false, growth: false, pro: true },
-  ],
-};
+/* ─── Helpers ──────────────────────────────────────────────────────── */
+function autoResizeTextarea(e) {
+  e.target.style.height = "auto";
+  e.target.style.height = e.target.scrollHeight + "px";
+}
+function highlightKeywords(text, keywords) {
+  if (!keywords?.length) return text;
+  const re = new RegExp(`\\b(${keywords.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "gi");
+  return text.replace(re, '<span style="background:rgba(245,133,41,0.3);color:#fbbf24;border-radius:4px;padding:0 3px">$&</span>');
+}
+function initials(name) {
+  return (name || "U").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+}
+function avatarColor(str) {
+  const colors = [
+    "linear-gradient(135deg,#f58529,#dd2a7b)",
+    "linear-gradient(135deg,#534AB7,#8134af)",
+    "linear-gradient(135deg,#0F6E56,#1D9E75)",
+    "linear-gradient(135deg,#854F0B,#EF9F27)",
+    "linear-gradient(135deg,#993556,#D4537E)",
+  ];
+  let h = 0;
+  for (let i = 0; i < (str || "").length; i++) h = (h * 31 + str.charCodeAt(i)) % colors.length;
+  return colors[h];
+}
 
-/* ─── Resolve the user's current plan from the profile API ────────── */
-/* Accepts `subscription`, plus the same fallback keys the dashboard reads,
-   and treats the legacy "grow" value (used elsewhere in the app) as "growth". */
 function normalizeSubscriptionTier(profile) {
-  const raw = profile?.subscription ?? profile?.subscriptionType ?? profile?.plan ?? profile?.subscriptionPlan ?? profile?.package ?? "";
-  const v = typeof raw === "string" ? raw.trim().toLowerCase() : "";
-  if (v === "grow") return "growth";
-  if (["free", "starter", "growth", "pro"].includes(v)) return v;
-  if (profile?.isSubscribed || profile?.subscriptionActive) return "starter";
+  const value = profile?.subscription ?? profile?.subscriptionType ?? profile?.plan ?? profile?.subscriptionPlan ?? profile?.package ?? "";
+  if (typeof value === "string" && value.trim()) {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "starter") return "starter";
+    if (normalized === "grow") return "grow";
+    if (normalized === "free") return "free";
+  }
+  if (profile?.isSubscribed || profile?.subscriptionActive) return "grow";
   return "free";
 }
 
-const PLAN_ACCENTS = {
-  free:    { c: "#8b8fff", grad: "linear-gradient(135deg,#534AB7,#8134af)" },
-  starter: { c: "#4ade80", grad: "linear-gradient(135deg,#0F6E56,#1D9E75)" },
-  growth:  { c: "#f58529", grad: "linear-gradient(135deg,#f58529,#dd2a7b)" },
-  pro:     { c: "#fbbf24", grad: "linear-gradient(135deg,#854F0B,#EF9F27)" },
-};
+function canAccessSmartFeature(featureKey, subscriptionTier) {
+  if (featureKey === "oneDmPerUser" || featureKey === "followToDm") {
+    return subscriptionTier === "starter" || subscriptionTier === "grow";
+  }
+  return subscriptionTier === "grow";
+}
 
-/* ─── FAQ item ──────────────────────────────────────────────────────── */
-function FaqItem({ q, a }) {
-  const [open, setOpen] = useState(false);
+/* ─── SparkBar ─────────────────────────────────────────────────────── */
+function SparkBar({ data, color }) {
+  const max = Math.max(...data, 1);
   return (
-    <div style={{ borderBottom: "1px solid var(--border)" }}>
-      <button onClick={() => setOpen((v) => !v)} style={{
-        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-        gap: 12, padding: "18px 4px", background: "none", border: "none", cursor: "pointer",
-        textAlign: "left", color: "var(--text-primary)", fontSize: 15, fontWeight: 600, fontFamily: "'DM Sans',sans-serif",
-      }}>
-        {q}
-        <span style={{ flexShrink: 0, fontSize: 18, color: "var(--text-muted)", transform: open ? "rotate(45deg)" : "none", transition: "transform 0.2s ease" }}>+</span>
+    <div className="bar-chart">
+      {data.map((v, i) => (
+        <div key={i} className="bar-item" style={{ height: `${Math.round((v / max) * 100)}%`, background: color, opacity: i === data.length - 1 ? 1 : 0.4 + (i / data.length) * 0.4 }} />
+      ))}
+    </div>
+  );
+}
+
+/* ─── DailyCapBanner ───────────────────────────────────────────────── */
+function DailyCapBanner({ profile, isSubscribed, onUpgradeClick }) {
+  const sentToday = profile?.dmsSentToday ?? 0;
+  const cap       = profile?.dailyCap     ?? 100;
+  const pct       = Math.min(Math.round((sentToday / cap) * 100), 100);
+  const danger    = pct >= 80;
+  const fillColor = danger
+    ? "linear-gradient(90deg,#f87171,#ef4444)"
+    : "linear-gradient(90deg,#4ade80,#22c55e)";
+  const countColor = danger ? "#f87171" : "#4ade80";
+
+  return (
+    <div className="cap-banner">
+      <div style={{ flexShrink: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-secondary)" }}>
+          Account DM Cap
+        </div>
+        <div style={{ fontSize: 12, marginTop: 2, color: countColor, fontWeight: 700 }}>
+          {sentToday} / {cap} sent today
+        </div>
+      </div>
+      <div className="cap-bar-track">
+        <div className="cap-bar-fill" style={{ width: `${pct}%`, background: fillColor }} />
+      </div>
+      <div style={{ flexShrink: 0, textAlign: "right" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: countColor }}>{cap - sentToday}</div>
+        <div style={{ fontSize: 10, color: "var(--text-muted)" }}>remaining</div>
+      </div>
+      {danger && (
+        <div style={{ padding: "3px 8px", borderRadius: 20, background: "rgba(248,113,113,0.12)", color: "#fca5a5", fontSize: 10, fontWeight: 700, border: "1px solid rgba(248,113,113,0.3)", flexShrink: 0 }}>
+          ⚠️ Near limit
+        </div>
+      )}
+      {!isSubscribed && (
+        <button
+          onClick={onUpgradeClick}
+          style={{
+            flexShrink: 0, display: "flex", alignItems: "center", gap: 5,
+            padding: "6px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700,
+            border: "1px solid rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.12)",
+            color: "#fbbf24", cursor: "pointer", whiteSpace: "nowrap",
+          }}
+        >
+          ⭐ Upgrade for higher cap
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ─── UserButton ───────────────────────────────────────────────────── */
+function UserButton({ account, onLogout, onRemove }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button className="user-btn" onClick={() => setOpen((v) => !v)}>
+        {account.profilePicture
+          ? <img src={account.profilePicture} alt="avatar" className="user-btn-avatar" />
+          : <span className="user-btn-avatar-placeholder">{initials(account.accountName)}</span>}
+        <span style={{ color: "var(--text-primary)", maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {account.accountName || "Account"}
+        </span>
+        <span className={`user-btn-chevron ${open ? "open" : ""}`}>▾</span>
       </button>
       {open && (
-        <p style={{ margin: 0, padding: "0 4px 18px", color: "var(--text-secondary)", fontSize: 13.5, lineHeight: 1.7, maxWidth: 640 }}>{a}</p>
+        <div className="user-menu">
+          <div className="user-menu-header">
+            {account.profilePicture
+              ? <img src={account.profilePicture} alt="avatar" style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", border: "2px solid #dd2a7b" }} />
+              : <span className="user-btn-avatar-placeholder" style={{ width: 38, height: 38, fontSize: 14 }}>{initials(account.accountName)}</span>}
+            <div>
+              <div className="user-menu-name">{account.accountName || "Instagram Account"}</div>
+              <div className="user-menu-handle">@{account.username}</div>
+            </div>
+          </div>
+          <div style={{ height: 1, background: "var(--border)", margin: "2px 0" }} />
+          <button className="user-menu-item" onClick={() => { onLogout(); setOpen(false); }}>
+            <span style={{ fontSize: 16 }}>🚪</span><span>Logout</span>
+          </button>
+          <button className="user-menu-item danger" onClick={() => { onRemove(); setOpen(false); }}>
+            <span style={{ fontSize: 16 }}>🗑️</span><span>Remove Account</span>
+          </button>
+        </div>
       )}
     </div>
   );
 }
 
-/* ─── Plan card ─────────────────────────────────────────────────────── */
-function PlanCard({ plan, billing, isCurrent, onSelect, busy }) {
-  const accent = PLAN_ACCENTS[plan.id];
-  const price = billing === "annual" ? plan.annualPrice : plan.monthlyPrice;
-  const showsSavings = billing === "annual" && plan.monthlyPrice > 0;
-
+/* ─── SidebarContent ───────────────────────────────────────────────── */
+function SidebarContent({ thumbnailRef, posts, selectedPost, setSelectedPost, loadingMore, loading, onClose, postFilter, onFilterChange }) {
+  const filteredPosts = posts.filter((p) => {
+    if (postFilter === "running") return p.enabled === true;
+    if (postFilter === "paused")  return !p.enabled;
+    return true;
+  });
   return (
-    <div style={{
-      position: "relative", borderRadius: 22, padding: "26px 22px 22px",
-      background: plan.featured ? "var(--card-bg-featured)" : "var(--card-bg)",
-      border: plan.featured ? "1.5px solid rgba(221,42,123,0.4)" : "1.5px solid var(--border)",
-      boxShadow: plan.featured ? "0 20px 60px rgba(221,42,123,0.18)" : "var(--shadow-card)",
-      display: "flex", flexDirection: "column", gap: 16,
-      transform: plan.featured ? "translateY(-8px)" : "none",
-      transition: "transform 0.25s ease",
-    }}>
-      {plan.badge && (
-        <div style={{
-          position: "absolute", top: -13, left: 22, padding: "4px 12px", borderRadius: 20,
-          fontSize: 11, fontWeight: 700, letterSpacing: "0.03em", color: "#fff",
-          background: accent.grad, display: "flex", alignItems: "center", gap: 5,
-          boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
-        }}>
-          <span>{plan.badge.icon}</span>{plan.badge.label}
-        </div>
-      )}
-
-      <div>
-        <h3 className="syne" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", marginBottom: 4 }}>{plan.name}</h3>
-        <p style={{ fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.5, minHeight: 32 }}>{plan.tagline}</p>
-      </div>
-
-      <div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-          <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 38, fontWeight: 800, color: "var(--text-primary)" }}>
-            {price === 0 ? "$0" : `$${price}`}
-          </span>
-          {price > 0 && <span style={{ fontSize: 13, color: "var(--text-muted)" }}>/mo</span>}
-        </div>
-        {showsSavings ? (
-          <div style={{ fontSize: 11.5, color: accent.c, fontWeight: 600, marginTop: 3 }}>
-            billed annually · save ${((plan.monthlyPrice - plan.annualPrice) * 12).toFixed(0)}/yr
-          </div>
-        ) : (
-          <div style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 3 }}>
-            {price === 0 ? "no card required" : billing === "annual" ? "billed annually" : "billed monthly"}
-          </div>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div style={{ padding: "10px", borderBottom: "1px solid var(--border)", background: "linear-gradient(160deg,rgba(245,133,41,0.08),rgba(129,52,175,0.08))", flexShrink: 0, display: "flex", gap: 5 }}>
+        {[
+          { key: "all",     label: "All",     icon: "◉" },
+          { key: "running", label: "Running", icon: "▶" },
+          { key: "paused",  label: "Paused",  icon: "⏸" },
+        ].map(({ key, label, icon }) => (
+          <button key={key} onClick={() => { onFilterChange(key); onClose?.(); }}
+            style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+              padding: "6px 0", borderRadius: 50, fontSize: 11, fontWeight: 600, cursor: "pointer",
+              transition: "all 0.2s ease",
+              border: postFilter === key
+                ? key === "running" ? "1.5px solid rgba(34,197,94,0.5)"
+                : key === "paused"  ? "1.5px solid rgba(248,113,113,0.4)"
+                :                    "1.5px solid var(--border-accent)"
+                : "1.5px solid var(--border)",
+              background: postFilter === key
+                ? key === "running" ? "rgba(34,197,94,0.12)"
+                : key === "paused"  ? "rgba(248,113,113,0.10)"
+                :                    "rgba(221,42,123,0.08)"
+                : "var(--surface)",
+              color: postFilter === key
+                ? key === "running" ? "#4ade80"
+                : key === "paused"  ? "#fca5a5"
+                :                    "var(--text-primary)"
+                : "var(--text-secondary)",
+            }}>
+            <span style={{ fontSize: 10 }}>{icon}</span>{label}
+          </button>
+        ))}
+        {onClose && (
+          <button onClick={onClose} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-secondary)", width: 28, height: 28, flexShrink: 0, borderRadius: "50%", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
         )}
       </div>
-
-      <div style={{ padding: "9px 12px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)", fontSize: 12.5, fontWeight: 700, color: accent.c, textAlign: "center" }}>
-        {plan.dmCap}
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 9, flex: 1 }}>
-        {plan.features.map((f, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: f.included ? "var(--text-primary)" : "var(--text-muted)", opacity: f.included ? 1 : 0.6 }}>
-            <span style={{ flexShrink: 0, marginTop: 1, color: f.included ? accent.c : "var(--text-muted)" }}>{f.included ? "✓" : "–"}</span>
-            <span style={{ fontWeight: f.highlight ? 700 : 400, textDecoration: f.included ? "none" : "line-through" }}>{f.text}</span>
+      <div ref={thumbnailRef} className="ig-scroll" style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
+        {loading && posts.length === 0 ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 88, borderRadius: 10 }} />)}
           </div>
-        ))}
-      </div>
-
-      <button
-        onClick={() => !isCurrent && onSelect(plan)}
-        disabled={isCurrent || busy}
-        style={{
-          marginTop: 4, padding: "12px 0", borderRadius: 12, fontSize: 13.5, fontWeight: 700,
-          fontFamily: "'DM Sans',sans-serif", cursor: isCurrent ? "default" : "pointer",
-          border: isCurrent ? "1.5px solid var(--border)" : plan.featured ? "none" : "1.5px solid var(--border-accent)",
-          background: isCurrent ? "var(--surface)" : plan.featured ? accent.grad : "transparent",
-          color: isCurrent ? "var(--text-secondary)" : plan.featured ? "#fff" : "var(--text-primary)",
-          opacity: busy ? 0.6 : 1,
-        }}
-      >
-        {isCurrent ? "✓ Current Plan" : busy ? "Please wait…" : plan.cta}
-      </button>
-    </div>
-  );
-}
-
-/* ─── Comparison table ──────────────────────────────────────────────── */
-function CompareTable({ rows, currentTier }) {
-  const cols = [
-    { key: "free", label: "Free" }, { key: "starter", label: "Starter" },
-    { key: "growth", label: "Growth" }, { key: "pro", label: "Pro" },
-  ];
-  const renderCell = (v) => {
-    if (v === true) return <span style={{ color: "#4ade80", fontSize: 16 }}>✓</span>;
-    if (v === false) return <span style={{ color: "var(--text-muted)", fontSize: 16 }}>–</span>;
-    return <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: 13 }}>{v}</span>;
-  };
-  return (
-    <div style={{ overflowX: "auto", borderRadius: 16, border: "1px solid var(--border)" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}>
-        <thead>
-          <tr style={{ background: "var(--surface)" }}>
-            <th style={{ textAlign: "left", padding: "14px 18px", fontSize: 11.5, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--text-secondary)" }}>Feature</th>
-            {cols.map((c) => (
-              <th key={c.key} style={{
-                padding: "14px 10px", fontSize: 12.5, fontWeight: 700, color: c.key === currentTier ? "#dd2a7b" : "var(--text-primary)",
-              }}>{c.label}{c.key === currentTier && <div style={{ fontSize: 9.5, fontWeight: 600, color: "var(--text-muted)" }}>(yours)</div>}</th>
+        ) : filteredPosts.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "32px 12px", color: "var(--text-secondary)" }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>🔍</div>
+            <div style={{ fontSize: 13, fontWeight: 500 }}>No posts match</div>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {filteredPosts.map((post) => (
+              <div key={post.id} className={`post-thumb ${selectedPost?.id === post.id ? "active" : ""}`}
+                onClick={() => { setSelectedPost(post); onClose?.(); }}>
+                <img src={post.image || post.mediaUrl} alt="" />
+                <div className="thumb-overlay">
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 4 }}>
+                    <div className="thumb-caption">{post.caption || "Instagram Post"}</div>
+                    {post.enabled && <span style={{ flexShrink: 0, width: 7, height: 7, borderRadius: "50%", background: "#4ade80", boxShadow: "0 0 5px #4ade80", marginTop: 2 }} />}
+                  </div>
+                </div>
+              </div>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={r.feature} style={{ borderTop: "1px solid var(--border)", background: i % 2 ? "transparent" : "var(--card-bg)" }}>
-              <td style={{ padding: "12px 18px", fontSize: 13, color: "var(--text-secondary)" }}>{r.feature}</td>
-              {cols.map((c) => <td key={c.key} style={{ padding: "12px 10px", textAlign: "center" }}>{renderCell(r[c.key])}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </div>
+        )}
+        {loadingMore && <div style={{ textAlign: "center", padding: "12px 0", color: "var(--text-secondary)", fontSize: 13 }}>Loading more…</div>}
+      </div>
     </div>
   );
 }
 
-/* ─── Main page ─────────────────────────────────────────────────────── */
-export default function SubscriptionPlans() {
-  const navigate = useNavigate();
-  const wrapRef  = useRef(null);
+/* ─── AnalyticsSection ─────────────────────────────────────────────── */
+function AnalyticsSection({ analytics, analyticsLoading }) {
+  if (analyticsLoading) return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10, marginBottom: 20 }}>
+      {Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 70, borderRadius: 12 }} />)}
+    </div>
+  );
+  const stats = [
+    { label: "Comments",   value: analytics?.comments  ?? 0,    color: "#f58529", bg: "linear-gradient(135deg,rgba(245,133,41,0.15),rgba(221,42,123,0.1))", border: "rgba(245,133,41,0.22)" },
+    { label: "DMs Sent",   value: analytics?.dmsSent   ?? 0,    color: "#8b8fff", bg: "linear-gradient(135deg,rgba(81,91,212,0.15),rgba(129,52,175,0.1))",  border: "rgba(81,91,212,0.22)" },
+    { label: "Conversion", value: `${analytics?.conversionRate ?? 0}%`, color: "#4ade80", bg: "linear-gradient(135deg,rgba(34,197,94,0.12),rgba(16,185,129,0.08))", border: "rgba(34,197,94,0.2)" },
+    { label: "Reach",      value: analytics?.reach      ?? 0,   color: "#fbbf24", bg: "linear-gradient(135deg,rgba(245,133,41,0.10),rgba(251,191,36,0.07))", border: "rgba(251,191,36,0.2)" },
+  ];
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10, marginBottom: 20 }}>
+      {stats.map((s) => (
+        <div key={s.label} className="stat-chip" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+          <span className="stat-label" style={{ color: s.color }}>{s.label}</span>
+          <span className="stat-value" style={{ color: "var(--text-primary)", fontSize: typeof s.value === "string" ? 18 : 22 }}>{s.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-  const [isDark, setIsDark]   = useState(false);
+/* ─── FollowToDmHint ───────────────────────────────────────────────── */
+function FollowToDmHint({ followReplyTemplate, onChangeTemplate }) {
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div className="follow-hint">
+        <span className="follow-hint-icon">👥</span>
+        <div className="follow-hint-body">
+          <strong>How it works:</strong> When someone comments, the bot replies publicly asking them to follow your account.
+          Once they follow, the DM is sent automatically via a follow-event webhook.
+        </div>
+      </div>
+      <span className="section-label">Public reply template</span>
+      <textarea
+        rows={2}
+        value={followReplyTemplate}
+        onChange={(e) => onChangeTemplate(e.target.value)}
+        placeholder="Hey! Follow our page and we'll send you all the details in your DMs 📩"
+        className="ig-input"
+        style={{ lineHeight: 1.5 }}
+      />
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>
+        This comment is posted publicly in reply to the commenter. Use <span style={{ color: "#fbbf24" }}>{"{name}"}</span> to personalise it.
+      </div>
+    </div>
+  );
+}
+
+/* ─── SmartControls ────────────────────────────────────────────────── */
+function SmartControls({ settings, onChange, isDark, subscriptionTier, onUpgradeClick }) {
+  const controls = [
+    {
+      key: "oneDmPerUser", icon: "👤", label: "One DM per user", sub: "Never message same person twice",
+      lightColor: "#7c3aed", darkColor: "#c4b5fd",
+      activeBg:  { light: "rgba(124,58,237,0.08)",  dark: "rgba(167,139,250,0.12)" },
+      activeBdr: { light: "rgba(124,58,237,0.45)",  dark: "rgba(196,181,253,0.55)" },
+    },
+    {
+      key: "followToDm", icon: "👥", label: "Follow to get DM", sub: "Ask to follow first, DM after they do",
+      lightColor: "#0F6E56", darkColor: "#5DCAA5",
+      activeBg:  { light: "rgba(15,110,86,0.08)",   dark: "rgba(93,202,165,0.12)" },
+      activeBdr: { light: "rgba(15,110,86,0.45)",   dark: "rgba(93,202,165,0.55)" },
+    },
+    {
+      key: "rotateMessages", icon: "🔄", label: "Rotate messages", sub: "Cycle through message variants",
+      lightColor: "#1d4ed8", darkColor: "#93c5fd",
+      activeBg:  { light: "rgba(29,78,216,0.08)",   dark: "rgba(96,165,250,0.12)"  },
+      activeBdr: { light: "rgba(29,78,216,0.45)",   dark: "rgba(96,165,250,0.55)"  },
+    },
+    {
+      key: "personalizeMessage", icon: "✨", label: "Personalize {name}", sub: "Insert commenter's name in DM",
+      lightColor: "#b45309", darkColor: "#fde68a",
+      activeBg:  { light: "rgba(180,83,9,0.08)",    dark: "rgba(251,191,36,0.12)"  },
+      activeBdr: { light: "rgba(180,83,9,0.45)",    dark: "rgba(251,191,36,0.55)"  },
+    },
+  ];
+
+  return (
+    <div>
+      {subscriptionTier === "free" && (
+        <div
+          onClick={onUpgradeClick}
+          style={{
+            display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+            padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+            background: "linear-gradient(135deg,rgba(251,191,36,0.12),rgba(245,133,41,0.08))",
+            border: "1px solid rgba(251,191,36,0.35)", color: "#fbbf24",
+            fontSize: 12, fontWeight: 700,
+          }}
+        >
+          <span style={{ fontSize: 15 }}>🔒</span>
+          <span>Upgrade to unlock Starter or Grow features for smarter automation.</span>
+        </div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginBottom: 20 }}>
+        {controls.map(({ key, icon, label, sub, lightColor, darkColor, activeBg, activeBdr }) => {
+          const active      = !!settings[key];
+          const mode        = isDark ? "dark" : "light";
+          const accentColor = isDark ? darkColor : lightColor;
+          const locked      = !canAccessSmartFeature(key, subscriptionTier);
+          const bgColor     = locked
+            ? (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)")
+            : active ? activeBg[mode]  : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)");
+          const borderColor = locked
+            ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)")
+            : active ? activeBdr[mode] : (isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)");
+          const labelColor  = locked ? "var(--text-muted)" : active ? accentColor : (isDark ? "#f0eef8" : "#1a1828");
+          const subColor    = isDark ? "#a09fb5" : "#6b6880";
+          return (
+            <div key={key} onClick={() => (locked ? onUpgradeClick?.() : onChange(key, !active))}
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 16, cursor: "pointer", transition: "all 0.22s ease", background: bgColor, border: `2px solid ${borderColor}`, boxShadow: active && !locked ? `0 2px 16px ${activeBg[mode]}` : "none", position: "relative", opacity: locked ? 0.85 : 1 }}>
+              <div style={{ position: "absolute", top: 9, right: 12, padding: "2px 7px", borderRadius: 20, fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 3,
+                background: locked ? "rgba(251,191,36,0.15)" : active ? "rgba(74,222,128,0.18)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"),
+                color: locked ? "#fbbf24" : active ? "#4ade80" : (isDark ? "#a09fb5" : "#6b6880"),
+                border: locked ? "1px solid rgba(251,191,36,0.35)" : active ? "1px solid rgba(74,222,128,0.35)" : (isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.10)"),
+                transition: "all 0.2s ease" }}>
+                {locked ? <><span>🔒</span><span>PRO</span></> : active ? "ON" : "OFF"}
+              </div>
+              <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, transition: "all 0.2s ease", background: !locked && active ? borderColor : (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)"), border: `1.5px solid ${!locked && active ? borderColor : "var(--border)"}` }}>{locked ? "🔒" : icon}</div>
+              <div style={{ minWidth: 0, flex: 1, paddingRight: 28 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, color: labelColor, transition: "color 0.2s" }}>{label}</div>
+                <div style={{ fontSize: 11, marginTop: 4, lineHeight: 1.4, color: subColor }}>{locked ? "Upgrade to Pro to unlock" : sub}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ─── MessageVariants ──────────────────────────────────────────────── */
+function MessageVariants({ variants, onChange }) {
+  const addVariant    = () => onChange([...variants, ""]);
+  const removeVariant = (i) => onChange(variants.filter((_, idx) => idx !== i));
+  const updateVariant = (i, val) => { const v = [...variants]; v[i] = val; onChange(v); };
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <span className="section-label" style={{ marginBottom: 0 }}>Message Variants</span>
+        {variants.length < 3 && (
+          <button onClick={addVariant} style={{ fontSize: 12, fontWeight: 600, color: "#dd2a7b", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>+ Add variant</button>
+        )}
+      </div>
+      {variants.map((v, i) => (
+        <div key={i} style={{ position: "relative", marginBottom: 8 }}>
+          <textarea rows={2} value={v} onChange={(e) => updateVariant(i, e.target.value)} placeholder={`Variant ${i + 1}…`} className="ig-input" style={{ lineHeight: 1.5, paddingRight: 36 }} />
+          {variants.length > 1 && (
+            <button onClick={() => removeVariant(i)} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 16 }}>×</button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Main Component ───────────────────────────────────────────────── */
+export default function InstagramManager() {
+  const navigate     = useNavigate();
+  const wrapRef      = useRef(null);
+  const thumbnailRef = useRef(null);
+
+  const [isDark, setIsDark]             = useState(false);
+  const [posts, setPosts]               = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [nextToken, setNextToken]       = useState(null);
+  const [loading, setLoading]           = useState(false);
+  const [loadingMore, setLoadingMore]   = useState(false);
+  const [postFilter, setPostFilter]     = useState("all");
+  const [drawerOpen, setDrawerOpen]     = useState(false);
+  const [instagramAccount, setInstagramAccount] = useState({ accountName: "", username: "", profilePicture: "" });
+
   const [profile, setProfile] = useState(null);
-  const [billing, setBilling] = useState("monthly");
-  const [busyPlan, setBusyPlan] = useState(null);
 
-  const currentTier = normalizeSubscriptionTier(profile);
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+  const [commentType, setCommentType]   = useState("all");
+  const [keywords, setKeywords]         = useState([]);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [triggerKeywords]               = useState([]);
+  const [dmMessage, setDmMessage]       = useState("");
+
+  const [smartSettings, setSmartSettings] = useState({
+    oneDmPerUser:       true,
+    followToDm:         false,
+    rotateMessages:     false,
+    personalizeMessage: true,
+  });
+
+  const [followReplyTemplate, setFollowReplyTemplate] = useState(
+    "Hey {name}! Follow our page and we'll send you all the details in your DMs 📩"
+  );
+
+  const [messageVariants, setMessageVariants] = useState([""]);
+
+  const [analytics, setAnalytics]           = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  // ── Subscription status (drives Smart Controls + DM cap upgrade gating) ──
+  const subscriptionTier = normalizeSubscriptionTier(profile);
+  const isSubscribed = subscriptionTier !== "free";
+  const handleUpgradeClick = () => navigate("/subscription");
 
   useEffect(() => {
     if (wrapRef.current) applyTheme(wrapRef.current, isDark ? "dark" : "light");
@@ -272,88 +485,362 @@ export default function SubscriptionPlans() {
   useEffect(() => {
     api.get("/insta/profile")
       .then((res) => {
-        setProfile(res.data);
-        setIsDark(res.data?.theme === "dark");
+        const data = res.data;
+        setInstagramAccount({
+          accountName:    data?.accountName || data?.username || "Instagram Account",
+          username:       data?.username    || "",
+          profilePicture: data?.profilePicture || "",
+        });
+        setProfile(data);
+        if (data?.theme === "dark") setIsDark(true);
+        else setIsDark(false);
       })
       .catch(() => navigate("/"));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleSelectPlan = async (plan) => {
-    if (plan.id === "free") {
-      try {
-        setBusyPlan(plan.id);
-        await api.post("/insta/subscription/downgrade", { planId: plan.id });
-        setProfile((p) => ({ ...p, subscription: "free" }));
-      } catch (e) { console.error(e); alert("Couldn't switch to Free. Please try again."); }
-      finally { setBusyPlan(null); }
-      return;
-    }
+  const fetchPosts = useCallback(async (next = null) => {
     try {
-      setBusyPlan(plan.id);
-      const res = await api.post("/insta/subscription/checkout", { planId: plan.id, billing });
-      if (res.data?.checkoutUrl) window.location.href = res.data.checkoutUrl;
-      else alert("Checkout could not be started. Please try again.");
-    } catch (e) { console.error(e); alert("Couldn't start checkout. Please try again."); }
-    finally { setBusyPlan(null); }
+      next ? setLoadingMore(true) : setLoading(true);
+      const res     = await api.get("/insta/media", { params: { next } });
+      const fetched = res.data?.posts || [];
+      setPosts((prev) => (next ? [...prev, ...fetched] : fetched));
+      if (!selectedPost && fetched.length > 0) setSelectedPost(fetched[0]);
+      setNextToken(res.data?.next || null);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); setLoadingMore(false); }
+  }, [selectedPost]);
+
+  useEffect(() => { fetchPosts(); }, []);
+
+  useEffect(() => {
+    const el = thumbnailRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200 && nextToken && !loadingMore)
+        fetchPosts(nextToken);
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [nextToken, loadingMore, fetchPosts]);
+
+  useEffect(() => {
+    if (!selectedPost) return;
+    setAutoReplyEnabled(selectedPost.enabled ?? false);
+    setCommentType((selectedPost.replyAll ?? true) ? "all" : "specific");
+    const kw = selectedPost.keywords || [];
+    setKeywords(kw);
+    setKeywordInput(kw.join(", "));
+    setDmMessage(selectedPost.message || "");
+    setSmartSettings({
+      oneDmPerUser:       selectedPost.oneDmPerUser       ?? true,
+      followToDm:         selectedPost.followToDm         ?? false,
+      rotateMessages:     selectedPost.rotateMessages     ?? false,
+      personalizeMessage: selectedPost.personalizeMessage ?? true,
+    });
+    setFollowReplyTemplate(
+      selectedPost.followReplyTemplate ||
+      "Hey {name}! Follow our page and we'll send you all the details in your DMs 📩"
+    );
+    setMessageVariants(selectedPost.messageVariants?.length ? selectedPost.messageVariants : [selectedPost.message || ""]);
+
+    const mediaId = selectedPost.mediaId || selectedPost.instagramPostId || selectedPost.id;
+
+    setAnalyticsLoading(true);
+    api.get(`/insta/analytics/${mediaId}`)
+      .then((r) => setAnalytics(r.data))
+      .catch(() => setAnalytics(null))
+      .finally(() => setAnalyticsLoading(false));
+
+    api.get(`/insta/automation/${mediaId}/variants`)
+      .then((r) => { if (r.data?.messages?.length) setMessageVariants(r.data.messages); })
+      .catch(() => {});
+  }, [selectedPost]);
+
+  const handleLogout = async () => {
+    try { await api.get("/insta/logout"); navigate("/"); }
+    catch (e) { console.error(e); alert("Failed to logout."); }
+  };
+  const handleRemoveAccount = async () => {
+    if (!window.confirm("Remove this Instagram account?")) return;
+    try { await api.delete("/insta/removeAccount"); alert("Account removed."); }
+    catch (e) { console.error(e); alert("Failed to remove account."); }
+  };
+  const handleKeywordChange = (val) => {
+    setKeywordInput(val);
+    setKeywords(val.split(/[,\n]+/).map((w) => w.trim()).filter(Boolean));
+  };
+  const handleToggle = async () => {
+    const next = !autoReplyEnabled;
+    setAutoReplyEnabled(next);
+    if (!next) {
+      try {
+        await api.post("/insta/automation", {
+          instagramPostId: selectedPost?.instagramPostId || selectedPost?.id,
+          autoReply: { enabled: false },
+        });
+      } catch (e) { console.error(e); setAutoReplyEnabled(true); }
+    }
+  };
+  const handleSmartChange = (key, val) => {
+    if (!canAccessSmartFeature(key, subscriptionTier)) { handleUpgradeClick(); return; }
+    setSmartSettings((prev) => ({ ...prev, [key]: val }));
   };
 
-  const initVars = Object.entries(THEMES[isDark ? "dark" : "light"]).reduce((a, [k, v]) => { a[k] = v; return a; }, {});
+  const handleSubmitAutoReply = async () => {
+    try {
+      const mediaId = selectedPost?.mediaId || selectedPost?.instagramPostId || selectedPost?.id;
+      await api.post("/insta/automation", {
+        postId: selectedPost?.id,
+        instagramPostId: mediaId,
+        mediaId,
+        username: instagramAccount.username,
+        autoReply: {
+          enabled: autoReplyEnabled,
+          replyType: commentType,
+          replyAll: commentType === "all",
+          keywords: commentType === "specific" ? keywords : [],
+          message: dmMessage,
+          ...smartSettings,
+          ...(smartSettings.followToDm ? { followReplyTemplate } : {}),
+        },
+      });
+      if (smartSettings.rotateMessages) {
+        await api.post(`/insta/automation/${mediaId}/variants`, { messages: messageVariants.filter(Boolean) });
+      }
+      alert("Settings saved successfully");
+    } catch (e) { console.error(e); alert("Failed to save settings"); }
+  };
+
+  const handleDuplicateSettings = async () => {
+    const target = prompt("Enter comma-separated post IDs to copy settings to:");
+    if (!target) return;
+    try {
+      await api.post("/insta/automation/duplicate", {
+        fromMediaId: selectedPost?.mediaId || selectedPost?.id,
+        toMediaIds: target.split(",").map((s) => s.trim()).filter(Boolean),
+      });
+      alert("Settings copied successfully");
+    } catch (e) { console.error(e); alert("Failed to duplicate settings"); }
+  };
+
+  const insertToken = (token) => setDmMessage((prev) => prev + token);
+  const handleThemeToggle = () => setIsDark((v) => !v);
+
+  const initVars     = Object.entries(THEMES[isDark ? "dark" : "light"]).reduce((a, [k, v]) => { a[k] = v; return a; }, {});
+  const sidebarProps = { thumbnailRef, posts, selectedPost, setSelectedPost, loadingMore, loading, postFilter, onFilterChange: setPostFilter };
+
+  const TopbarActions = () => (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <button className="theme-btn" onClick={handleThemeToggle} title={isDark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme">
+        {isDark ? "☀️" : "🌙"}
+      </button>
+      <UserButton account={instagramAccount} onLogout={handleLogout} onRemove={handleRemoveAccount} />
+    </div>
+  );
 
   return (
-    <div ref={wrapRef} className="ig-wrap" style={{ minHeight: "100vh", background: "var(--bg)", position: "relative", overflow: "hidden", fontFamily: "'DM Sans',sans-serif", ...initVars }}>
+    <div ref={wrapRef} className="ig-wrap" style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", position: "relative", overflow: "hidden", ...initVars }}>
 
+      {/* Ambient orbs */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }} aria-hidden>
         <div style={{ position: "absolute", top: -120, left: -80, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,var(--orb1) 0%,transparent 70%)" }} />
         <div style={{ position: "absolute", bottom: -100, right: -60, width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle,var(--orb2) 0%,transparent 70%)" }} />
       </div>
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 1120, margin: "0 auto", padding: "56px 24px 80px" }}>
+      {/* Desktop sidebar */}
+      <aside className="desktop-sidebar ig-scroll" style={{ width: 264, flexShrink: 0, height: "100vh", overflowY: "auto", borderRight: "1px solid var(--border)", background: "var(--sidebar-bg)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 10 }}>
+        <SidebarContent {...sidebarProps} />
+      </aside>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 44 }}>
-          <button onClick={() => navigate(-1)} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-secondary)", padding: "8px 14px", borderRadius: 10, fontSize: 13, cursor: "pointer" }}>← Back</button>
-          <button onClick={() => setIsDark((v) => !v)} style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 16 }}>{isDark ? "☀️" : "🌙"}</button>
-        </div>
-
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ display: "inline-block", padding: "5px 14px", borderRadius: 20, background: "rgba(221,42,123,0.1)", border: "1px solid rgba(221,42,123,0.3)", fontSize: 11.5, fontWeight: 700, color: "#dd2a7b", marginBottom: 16 }}>
-            You're on the {profile ? currentTier[0].toUpperCase() + currentTier.slice(1) : "…"} plan
-          </div>
-          <h1 className="syne" style={{ fontSize: "clamp(28px,4.5vw,42px)", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.15, marginBottom: 12 }}>
-            Send more DMs.<br />Automate more of your growth.
-          </h1>
-          <p style={{ fontSize: 15, color: "var(--text-secondary)", maxWidth: 480, margin: "0 auto" }}>
-            Every plan runs the same automation engine — higher tiers just raise your daily sending cap and unlock smarter targeting.
-          </p>
-
-          <div style={{ display: "inline-flex", marginTop: 28, padding: 4, borderRadius: 30, background: "var(--surface)", border: "1px solid var(--border)" }}>
-            {["monthly", "annual"].map((b) => (
-              <button key={b} onClick={() => setBilling(b)} style={{
-                padding: "8px 18px", borderRadius: 26, fontSize: 12.5, fontWeight: 700, cursor: "pointer", border: "none",
-                background: billing === b ? "linear-gradient(135deg,#f58529,#dd2a7b)" : "transparent",
-                color: billing === b ? "#fff" : "var(--text-secondary)",
-              }}>
-                {b === "monthly" ? "Monthly" : "Annual · save 20%"}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 20, marginBottom: 64, alignItems: "stretch" }}>
-          {PLANS_DATA.plans.map((plan) => (
-            <PlanCard key={plan.id} plan={plan} billing={billing} isCurrent={plan.id === currentTier} onSelect={handleSelectPlan} busy={busyPlan === plan.id} />
-          ))}
-        </div>
-
-        <h2 className="syne" style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", marginBottom: 18, textAlign: "center" }}>Compare every feature</h2>
-        <div style={{ marginBottom: 64 }}>
-          <CompareTable rows={PLANS_DATA.compareRows} currentTier={currentTier} />
-        </div>
-
-        <h2 className="syne" style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", marginBottom: 8, textAlign: "center" }}>Questions, answered</h2>
-        <div style={{ maxWidth: 700, margin: "0 auto" }}>
-          {PLANS_DATA.faqs.map((f) => <FaqItem key={f.q} {...f} />)}
-        </div>
+      {/* Mobile topbar */}
+      <div className="mobile-topbar" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 30, height: 60, background: "var(--topbar-bg)", backdropFilter: "blur(16px)", borderBottom: "1px solid var(--border)", alignItems: "center", padding: "0 14px", gap: 10 }}>
+        <button onClick={() => setDrawerOpen(true)} style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-primary)", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>☰</button>
+        <span className="syne" style={{ fontWeight: 800, fontSize: 16, flex: 1, color: "var(--text-primary)" }}><span className="ig-grad-text">Instagram</span></span>
+        <TopbarActions />
       </div>
+
+      {drawerOpen && <div className="sidebar-drawer-overlay" onClick={() => setDrawerOpen(false)} />}
+      <nav className={`sidebar-drawer ig-scroll ${drawerOpen ? "open" : ""}`}>
+        <SidebarContent {...sidebarProps} onClose={() => setDrawerOpen(false)} />
+      </nav>
+
+      {/* Main */}
+      <main className="ig-scroll" style={{ flex: 1, overflowY: "auto", padding: "0 24px 40px", position: "relative", zIndex: 1 }}>
+        <div className="mobile-topbar" style={{ height: 60, background: "none", position: "static", backdropFilter: "none", border: "none" }} />
+
+        {/* Desktop topbar row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "16px 0 4px", maxWidth: 860, margin: "0 auto" }}>
+          <div className="desktop-sidebar" style={{ display: "flex" }}>
+            <TopbarActions />
+          </div>
+        </div>
+
+        {/* Account-level Daily DM Cap banner */}
+        <div style={{ maxWidth: 860, margin: "0 auto 16px" }}>
+          <DailyCapBanner profile={profile} isSubscribed={isSubscribed} onUpgradeClick={handleUpgradeClick} />
+        </div>
+
+        {selectedPost ? (
+          <div className="fade-up" style={{ maxWidth: 860, margin: "0 auto", paddingBottom: 40 }}>
+
+            {/* Hero */}
+            <div style={{ borderRadius: 24, overflow: "hidden", position: "relative", marginBottom: 20, boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
+              <img src={selectedPost.image || selectedPost.mediaUrl} alt="" style={{ width: "100%", maxHeight: 380, objectFit: "cover", display: "block" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.35) 45%,transparent 72%)" }} />
+
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 20px 20px" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 20, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)", marginBottom: 8 }}>
+                  <span style={{ fontSize: 14 }}>📸</span>
+                  <span style={{ fontSize: 13, color: "#fff", fontWeight: 500 }}>@{selectedPost.username || instagramAccount.username}</span>
+                </div>
+                <h2 className="syne" style={{ color: "#fff", fontSize: "clamp(16px,3.5vw,22px)", fontWeight: 800, lineHeight: 1.2, marginBottom: selectedPost.daysAgo ? 2 : 12 }}>Instagram Post</h2>
+                {selectedPost.daysAgo && <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, marginBottom: 14 }}>{selectedPost.daysAgo}</p>}
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
+                  {analyticsLoading
+                    ? Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} style={{ height: 56, borderRadius: 12, background: "rgba(255,255,255,0.08)", animation: "pulse 1.5s ease infinite" }} />
+                      ))
+                    : [
+                        { label: "Comments",   value: analytics?.comments          ?? 0,    color: "#f58529", border: "rgba(245,133,41,0.4)"  },
+                        { label: "DMs Sent",   value: analytics?.dmsSent           ?? 0,    color: "#8b8fff", border: "rgba(139,143,255,0.4)" },
+                        { label: "Conversion", value: `${analytics?.conversionRate ?? 0}%`, color: "#4ade80", border: "rgba(74,222,128,0.4)"  },
+                        { label: "Reach",      value: analytics?.reach             ?? 0,    color: "#fbbf24", border: "rgba(251,191,36,0.4)"  },
+                      ].map((s) => (
+                        <div key={s.label} style={{
+                          padding: "10px 12px", borderRadius: 12,
+                          background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)",
+                          border: `1px solid ${s.border}`,
+                          display: "flex", flexDirection: "column", gap: 3,
+                        }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: s.color }}>{s.label}</span>
+                          <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{s.value}</span>
+                        </div>
+                      ))
+                  }
+                </div>
+              </div>
+            </div>
+
+            {selectedPost.caption && (
+              <div className="ig-card" style={{ padding: "16px 20px", marginBottom: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span>📝</span>
+                  <span className="syne" style={{ fontWeight: 700, fontSize: 12, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Caption</span>
+                </div>
+                <p style={{ color: "var(--text-primary)", lineHeight: 1.7, fontSize: 14 }}>{selectedPost.caption}</p>
+              </div>
+            )}
+
+            {/* Auto Reply card */}
+            <div className="ig-card" style={{ padding: 24, borderColor: "var(--border-accent)", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+                <div>
+                  <h3 className="ig-grad-text syne" style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>🤖 Auto Reply</h3>
+                  <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                    Automate DMs for <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>@{selectedPost.username || instagramAccount.username}</span>'s post
+                  </p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span className={`status-badge ${autoReplyEnabled ? "on" : "off"}`}>
+                    <span className="status-dot" />{autoReplyEnabled ? "Running" : "Paused"}
+                  </span>
+                  <button type="button" onClick={handleToggle} className={`ig-toggle ${autoReplyEnabled ? "on" : "off"}`}>
+                    <span className="ig-toggle-knob">{autoReplyEnabled ? "✓" : ""}</span>
+                  </button>
+                </div>
+              </div>
+
+              {autoReplyEnabled && (
+                <>
+                  <div style={{ height: 1, background: "var(--border)", marginBottom: 20 }} />
+                  <span className="section-label">Trigger Condition</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                    {[{ value: "all", label: "All Comments", icon: "💬" }, { value: "specific", label: "Keyword Match", icon: "🔍" }].map((opt) => (
+                      <label key={opt.value} className={`radio-pill ${commentType === opt.value ? "selected" : ""}`} onClick={() => setCommentType(opt.value)}>
+                        <span className="radio-dot" />
+                        <span style={{ fontSize: 16 }}>{opt.icon}</span>
+                        <span>{opt.label}</span>
+                        <input type="radio" name="commentType" value={opt.value} checked={commentType === opt.value} onChange={(e) => setCommentType(e.target.value)} style={{ display: "none" }} />
+                      </label>
+                    ))}
+                  </div>
+
+                  {commentType === "specific" && (
+                    <div style={{ marginBottom: 20 }}>
+                      <span className="section-label">Trigger Keywords</span>
+                      <div style={{ position: "relative" }}>
+                        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", whiteSpace: "pre-wrap", wordBreak: "break-word", borderRadius: 12, border: "1.5px solid transparent", padding: "12px 14px", color: "transparent", overflow: "hidden", lineHeight: 1.5, fontSize: 14 }}
+                          dangerouslySetInnerHTML={{ __html: highlightKeywords(keywordInput, triggerKeywords) }} />
+                        <textarea rows={1} value={keywordInput}
+                          onChange={(e) => { handleKeywordChange(e.target.value); autoResizeTextarea(e); }}
+                          placeholder="price, details, catalog, menu…" className="ig-input" style={{ minHeight: 48, lineHeight: 1.5 }} />
+                      </div>
+                      {keywords.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                          {keywords.map((kw, i) => <span key={`${kw}-${i}`} className="kw-tag">{kw}</span>)}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <span className="section-label">Smart Controls</span>
+                  <SmartControls settings={smartSettings} onChange={handleSmartChange} isDark={isDark} subscriptionTier={subscriptionTier} onUpgradeClick={handleUpgradeClick} />
+
+                  {smartSettings.followToDm && (
+                    <FollowToDmHint
+                      followReplyTemplate={followReplyTemplate}
+                      onChangeTemplate={setFollowReplyTemplate}
+                    />
+                  )}
+
+                  {smartSettings.rotateMessages ? (
+                    <MessageVariants variants={messageVariants} onChange={setMessageVariants} />
+                  ) : (
+                    <div style={{ marginBottom: 16 }}>
+                      <span className="section-label">
+                        {smartSettings.followToDm ? "DM Message (sent after they follow)" : "DM Auto Reply Message"}
+                      </span>
+                      <textarea rows={4} value={dmMessage} onChange={(e) => setDmMessage(e.target.value)}
+                        placeholder={
+                          smartSettings.followToDm
+                            ? `Write the DM to send once @${selectedPost.username || instagramAccount.username} followers follow your page…`
+                            : `Write an automated DM for @${selectedPost.username || instagramAccount.username} followers…`
+                        }
+                        className="ig-input" style={{ lineHeight: 1.6 }} />
+                    </div>
+                  )}
+
+                  {smartSettings.personalizeMessage && (
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
+                      <span style={{ fontSize: 11, color: "var(--text-secondary)", alignSelf: "center" }}>Insert:</span>
+                      {["{name}", "{username}", "{keyword}"].map((t) => (
+                        <button key={t} className="token-tag" onClick={() => insertToken(t)}>{t}</button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", paddingTop: 4 }}>
+                    <button onClick={handleSubmitAutoReply} className="ig-btn-primary"><span>🚀</span><span>Save Settings</span></button>
+                    <button onClick={handleDuplicateSettings} className="ig-btn-secondary"><span>⧉</span><span>Copy to another post</span></button>
+                    {selectedPost.permalink && (
+                      <a href={selectedPost.permalink} target="_blank" rel="noreferrer" className="ig-btn-secondary" style={{ textDecoration: "none" }}>🔗 View on Instagram</a>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+            <div style={{ textAlign: "center", padding: 24 }}>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>📸</div>
+              <h2 className="ig-grad-text syne" style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Select a Post</h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: 15 }}>Choose a post from the panel to configure automation.</p>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
