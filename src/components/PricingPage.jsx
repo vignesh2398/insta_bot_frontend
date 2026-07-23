@@ -193,7 +193,7 @@ function FaqItem({ q, a }) {
     <div className="faq-item">
       <button className="faq-q" onClick={() => setOpen((v) => !v)}>
         <span>{q}</span>
-        <span className={`faq-chevron ₹{open ? "open" : ""}`}>▾</span>
+        <span className={`faq-chevron ${open ? "open" : ""}`}>▾</span>
       </button>
       {open && <div className="faq-a">{a}</div>}
     </div>
@@ -211,9 +211,9 @@ function PlanCard({ plan, annual, currentPlanId, onSelect, loading }) {
   if (isCurrent) ctaCls = "cta-current";
 
   return (
-    <div className={`plan-card ₹{plan.featured ? "featured" : ""} ₹{isCurrent ? "active-plan" : ""}`}>
+    <div className={`plan-card ${plan.featured ? "featured" : ""} ${isCurrent ? "active-plan" : ""}`}>
       {plan.badge && (
-        <div className={`plan-badge ₹{plan.badge.cls}`}>
+        <div className={`plan-badge ${plan.badge.cls}`}>
           <span>{plan.badge.icon}</span>
           <span>{plan.badge.label}</span>
         </div>
@@ -228,20 +228,20 @@ function PlanCard({ plan, annual, currentPlanId, onSelect, loading }) {
       <div className="plan-name">{plan.name}</div>
       <div className="plan-tagline">{plan.tagline}</div>
 
-      <div className={`dm-cap-pill ₹{plan.dmCapClass}`}>
+      <div className={`dm-cap-pill ${plan.dmCapClass}`}>
         <span style={{ fontSize: 15 }}>📨</span>
         <span>{plan.dmCap}</span>
       </div>
 
       <div className="plan-price-row">
-        {!isFree && <span className="plan-currency">₹</span>}
+        {!isFree && <span className="plan-currency">$</span>}
         <span className="plan-amount">{isFree ? "Free" : price}</span>
       </div>
       <div className="plan-period">
         {isFree ? "No credit card required" : annual ? "per month, billed annually" : "per month"}
         {annual && !isFree && (
           <span className="save-badge" style={{ marginLeft: 8 }}>
-            Save ₹{(plan.monthlyPrice - plan.annualPrice) * 12}/yr
+            Save ${(plan.monthlyPrice - plan.annualPrice) * 12}/yr
           </span>
         )}
       </div>
@@ -250,7 +250,7 @@ function PlanCard({ plan, annual, currentPlanId, onSelect, loading }) {
 
       <ul className="plan-features">
         {plan.features.map((f, i) => (
-          <li key={i} className={`plan-feature ₹{f.included ? "included" : "excluded"} ₹{f.highlight ? "highlight" : ""}`}>
+          <li key={i} className={`plan-feature ${f.included ? "included" : "excluded"} ${f.highlight ? "highlight" : ""}`}>
             <span className="feat-check">{f.included ? "✓" : "×"}</span>
             <span>{f.text}</span>
           </li>
@@ -258,7 +258,7 @@ function PlanCard({ plan, annual, currentPlanId, onSelect, loading }) {
       </ul>
 
       <button
-        className={`plan-cta ₹{ctaCls}`}
+        className={`plan-cta ${ctaCls}`}
         disabled={isCurrent || isLoading}
         onClick={() => !isCurrent && onSelect(plan)}
       >
@@ -468,13 +468,13 @@ export default function PricingPage() {
           {/* Billing toggle */}
           <div className="billing-toggle">
             <button
-              className={`billing-toggle-opt ₹{!annual ? "active" : ""}`}
+              className={`billing-toggle-opt ${!annual ? "active" : ""}`}
               onClick={() => setAnnual(false)}
             >
               Monthly
             </button>
             <button
-              className={`billing-toggle-opt ₹{annual ? "active" : ""}`}
+              className={`billing-toggle-opt ${annual ? "active" : ""}`}
               onClick={() => setAnnual(true)}
             >
               Annual <span className="save-badge" style={{ marginLeft: 6 }}>Save 20%</span>
