@@ -416,7 +416,7 @@ export default function PricingPage() {
       const amount = Math.round((annual ? plan.annualPrice : plan.monthlyPrice) * 100);
       const receipt = `${plan.id}-${annual ? "annual" : "monthly"}`;
 
-      const order = await api.post("/create-order", {
+      const order = await api.post("/insta/create-order", {
         amount,
         currency: "INR",
         receipt,
