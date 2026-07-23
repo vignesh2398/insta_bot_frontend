@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
-import "./Dashboardclaude.css";
+// import "./Dashboardclaude.css";
 
 /* ─── Google Fonts ─────────────────────────────────────────────────── */
 if (!document.getElementById("ig-fonts")) {
