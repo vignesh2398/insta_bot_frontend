@@ -85,7 +85,7 @@ function SparkBar({ data, color }) {
 }
 
 /* ─── DailyCapBanner ───────────────────────────────────────────────── */
-function DailyCapBanner({ profile }) {
+function DailyCapBanner({ profile, isSubscribed, onUpgradeClick }) {
   const sentToday = profile?.dmsSentToday ?? 0;
   const cap       = profile?.dailyCap     ?? 100;
   const pct       = Math.min(Math.round((sentToday / cap) * 100), 100);
@@ -116,6 +116,19 @@ function DailyCapBanner({ profile }) {
         <div style={{ padding: "3px 8px", borderRadius: 20, background: "rgba(248,113,113,0.12)", color: "#fca5a5", fontSize: 10, fontWeight: 700, border: "1px solid rgba(248,113,113,0.3)", flexShrink: 0 }}>
           ⚠️ Near limit
         </div>
+      )}
+      {!isSubscribed && (
+        <button
+          onClick={onUpgradeClick}
+          style={{
+            flexShrink: 0, display: "flex", alignItems: "center", gap: 5,
+            padding: "6px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700,
+            border: "1px solid rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.12)",
+            color: "#fbbf24", cursor: "pointer", whiteSpace: "nowrap",
+          }}
+        >
+          ⭐ Upgrade for higher cap
+        </button>
       )}
     </div>
   );
@@ -293,7 +306,7 @@ function FollowToDmHint({ followReplyTemplate, onChangeTemplate }) {
 }
 
 /* ─── SmartControls ────────────────────────────────────────────────── */
-function SmartControls({ settings, onChange, isDark }) {
+function SmartControls({ settings, onChange, isDark, isSubscribed, onUpgradeClick }) {
   const controls = [
     {
       key: "oneDmPerUser", icon: "👤", label: "One DM per user", sub: "Never message same person twice",
@@ -322,29 +335,55 @@ function SmartControls({ settings, onChange, isDark }) {
   ];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginBottom: 20 }}>
-      {controls.map(({ key, icon, label, sub, lightColor, darkColor, activeBg, activeBdr }) => {
-        const active      = !!settings[key];
-        const mode        = isDark ? "dark" : "light";
-        const accentColor = isDark ? darkColor : lightColor;
-        const bgColor     = active ? activeBg[mode]  : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)");
-        const borderColor = active ? activeBdr[mode] : (isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)");
-        const labelColor  = active ? accentColor : (isDark ? "#f0eef8" : "#1a1828");
-        const subColor    = isDark ? "#a09fb5" : "#6b6880";
-        return (
-          <div key={key} onClick={() => onChange(key, !active)}
-            style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 16, cursor: "pointer", transition: "all 0.22s ease", background: bgColor, border: `2px solid ${borderColor}`, boxShadow: active ? `0 2px 16px ${activeBg[mode]}` : "none", position: "relative" }}>
-            <div style={{ position: "absolute", top: 9, right: 12, padding: "2px 7px", borderRadius: 20, fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", background: active ? "rgba(74,222,128,0.18)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"), color: active ? "#4ade80" : (isDark ? "#a09fb5" : "#6b6880"), border: active ? "1px solid rgba(74,222,128,0.35)" : (isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.10)"), transition: "all 0.2s ease" }}>
-              {active ? "ON" : "OFF"}
+    <div>
+      {!isSubscribed && (
+        <div
+          onClick={onUpgradeClick}
+          style={{
+            display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+            padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+            background: "linear-gradient(135deg,rgba(251,191,36,0.12),rgba(245,133,41,0.08))",
+            border: "1px solid rgba(251,191,36,0.35)", color: "#fbbf24",
+            fontSize: 12, fontWeight: 700,
+          }}
+        >
+          <span style={{ fontSize: 15 }}>🔒</span>
+          <span>Smart Controls are a Pro feature — tap to upgrade and unlock them</span>
+        </div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginBottom: 20 }}>
+        {controls.map(({ key, icon, label, sub, lightColor, darkColor, activeBg, activeBdr }) => {
+          const active      = !!settings[key];
+          const mode        = isDark ? "dark" : "light";
+          const accentColor = isDark ? darkColor : lightColor;
+          const locked      = !isSubscribed;
+          const bgColor     = locked
+            ? (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)")
+            : active ? activeBg[mode]  : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)");
+          const borderColor = locked
+            ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)")
+            : active ? activeBdr[mode] : (isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)");
+          const labelColor  = locked ? "var(--text-muted)" : active ? accentColor : (isDark ? "#f0eef8" : "#1a1828");
+          const subColor    = isDark ? "#a09fb5" : "#6b6880";
+          return (
+            <div key={key} onClick={() => (locked ? onUpgradeClick?.() : onChange(key, !active))}
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 16, cursor: "pointer", transition: "all 0.22s ease", background: bgColor, border: `2px solid ${borderColor}`, boxShadow: active && !locked ? `0 2px 16px ${activeBg[mode]}` : "none", position: "relative", opacity: locked ? 0.85 : 1 }}>
+              <div style={{ position: "absolute", top: 9, right: 12, padding: "2px 7px", borderRadius: 20, fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 3,
+                background: locked ? "rgba(251,191,36,0.15)" : active ? "rgba(74,222,128,0.18)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"),
+                color: locked ? "#fbbf24" : active ? "#4ade80" : (isDark ? "#a09fb5" : "#6b6880"),
+                border: locked ? "1px solid rgba(251,191,36,0.35)" : active ? "1px solid rgba(74,222,128,0.35)" : (isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.10)"),
+                transition: "all 0.2s ease" }}>
+                {locked ? <><span>🔒</span><span>PRO</span></> : active ? "ON" : "OFF"}
+              </div>
+              <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, transition: "all 0.2s ease", background: !locked && active ? borderColor : (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)"), border: `1.5px solid ${!locked && active ? borderColor : "var(--border)"}` }}>{locked ? "🔒" : icon}</div>
+              <div style={{ minWidth: 0, flex: 1, paddingRight: 28 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, color: labelColor, transition: "color 0.2s" }}>{label}</div>
+                <div style={{ fontSize: 11, marginTop: 4, lineHeight: 1.4, color: subColor }}>{locked ? "Upgrade to Pro to unlock" : sub}</div>
+              </div>
             </div>
-            <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, transition: "all 0.2s ease", background: active ? borderColor : (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)"), border: `1.5px solid ${active ? borderColor : "var(--border)"}` }}>{icon}</div>
-            <div style={{ minWidth: 0, flex: 1, paddingRight: 28 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, color: labelColor, transition: "color 0.2s" }}>{label}</div>
-              <div style={{ fontSize: 11, marginTop: 4, lineHeight: 1.4, color: subColor }}>{sub}</div>
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -414,6 +453,10 @@ export default function InstagramManager() {
 
   const [analytics, setAnalytics]           = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  // ── Subscription status (drives Smart Controls + DM cap upgrade gating) ──
+  const isSubscribed = profile?.isSubscribed ?? profile?.subscriptionActive ?? false;
+  const handleUpgradeClick = () => navigate("/subscription");
 
   useEffect(() => {
     if (wrapRef.current) applyTheme(wrapRef.current, isDark ? "dark" : "light");
@@ -518,7 +561,10 @@ export default function InstagramManager() {
       } catch (e) { console.error(e); setAutoReplyEnabled(true); }
     }
   };
-  const handleSmartChange = (key, val) => setSmartSettings((prev) => ({ ...prev, [key]: val }));
+  const handleSmartChange = (key, val) => {
+    if (!isSubscribed) { handleUpgradeClick(); return; }
+    setSmartSettings((prev) => ({ ...prev, [key]: val }));
+  };
 
   const handleSubmitAutoReply = async () => {
     try {
@@ -611,7 +657,7 @@ export default function InstagramManager() {
 
         {/* Account-level Daily DM Cap banner */}
         <div style={{ maxWidth: 860, margin: "0 auto 16px" }}>
-          <DailyCapBanner profile={profile} />
+          <DailyCapBanner profile={profile} isSubscribed={isSubscribed} onUpgradeClick={handleUpgradeClick} />
         </div>
 
         {selectedPost ? (
@@ -719,7 +765,7 @@ export default function InstagramManager() {
                   )}
 
                   <span className="section-label">Smart Controls</span>
-                  <SmartControls settings={smartSettings} onChange={handleSmartChange} isDark={isDark} />
+                  <SmartControls settings={smartSettings} onChange={handleSmartChange} isDark={isDark} isSubscribed={isSubscribed} onUpgradeClick={handleUpgradeClick} />
 
                   {smartSettings.followToDm && (
                     <FollowToDmHint
