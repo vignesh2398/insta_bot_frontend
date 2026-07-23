@@ -357,7 +357,7 @@ export default function PricingPage() {
   const fetchPricing = () => {
     setPricingLoading(true);
     setPricingError(null);
-    api.get("/billing/pricing")
+    api.get("/insta/billing/pricing")
       .then((res) => {
         setPlans(res.data?.plans || []);
         setFaqs(res.data?.faqs || []);
