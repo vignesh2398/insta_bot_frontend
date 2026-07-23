@@ -388,27 +388,6 @@ function AnalyticsSection({ analytics, analyticsLoading }) {
   );
 }
 
-/* ─── SparklineSection ─────────────────────────────────────────────── */
-function SparklineSection({ analytics }) {
-  const activity = analytics?.weeklyActivity ?? [12, 19, 8, 27, 22, 35, 41];
-  return (
-    <div className="ig-card" style={{ padding: "14px 16px", marginBottom: 20 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <span className="section-label" style={{ marginBottom: 0 }}>Comment Activity (7 days)</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "#8b8fff" }}>
-          {(analytics?.activityChange ?? 0) >= 0 ? "↑" : "↓"} {Math.abs(analytics?.activityChange ?? 0)}%
-        </span>
-      </div>
-      <SparkBar data={activity} color="#8134af" />
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-        {["M","T","W","T","F","S","S"].map((d, i) => (
-          <span key={i} style={{ fontSize: 9, color: "var(--text-muted)", flex: 1, textAlign: "center" }}>{d}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* ─── FollowToDmHint ───────────────────────────────────────────────── */
 function FollowToDmHint({ followReplyTemplate, onChangeTemplate }) {
   return (
@@ -799,8 +778,6 @@ export default function InstagramManager() {
                 </div>
               </div>
             </div>
-
-            <SparklineSection analytics={analytics} />
 
             {selectedPost.caption && (
               <div className="ig-card" style={{ padding: "16px 20px", marginBottom: 20 }}>
