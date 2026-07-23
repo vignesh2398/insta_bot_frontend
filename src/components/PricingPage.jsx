@@ -442,7 +442,7 @@ export default function PricingPage() {
             });
 
             if (verifyRes.data?.success) {
-              alert("Payment verified successfully");
+              navigate("/dashboardclaude");
             } else {
               alert(verifyRes.data?.error || "Payment verification failed");
             }
