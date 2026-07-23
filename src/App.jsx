@@ -29,7 +29,7 @@ function App() {
         <Route path="/connect-instagram" element={<ConnectInstagram />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/dashboardclaude" element={< Dashboardclaude/>} />
-        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/subscription" element={<PricingPage />} />
 
         <Route path="/linkInstagram" element={<LinkInstagram />} />
       </Routes>
