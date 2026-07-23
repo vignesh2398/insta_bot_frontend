@@ -409,135 +409,6 @@ function SparklineSection({ analytics }) {
   );
 }
 
-/* ─── ActivityLog — paginated table ───────────────────────────────── */
-const LOG_PER_PAGE = 10;
-
-function ActivityLogSection({ log, logLoading }) {
-  const [logFilter, setLogFilter] = useState("all");
-  const [logSearch, setLogSearch] = useState("");
-  const [logPage,   setLogPage]   = useState(0);
-
-  if (logLoading) return (
-    <div className="ig-card" style={{ padding: "14px 16px", marginBottom: 20 }}>
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="skeleton" style={{ height: 24, borderRadius: 6, marginBottom: 6 }} />
-      ))}
-    </div>
-  );
-  if (!log?.length) return null;
-
-  const q = logSearch.toLowerCase();
-  const filtered = log.filter(e => {
-    if (logFilter === "sent"   && e.status !== "sent")   return false;
-    if (logFilter === "failed" && e.status !== "failed") return false;
-    if (q && !e.username?.toLowerCase().includes(q) && !e.keyword?.toLowerCase().includes(q)) return false;
-    return true;
-  });
-
-  const sentCount = filtered.filter(e => e.status === "sent").length;
-  const failCount = filtered.filter(e => e.status === "failed").length;
-  const pages     = Math.max(1, Math.ceil(filtered.length / LOG_PER_PAGE));
-  const safePage  = Math.min(logPage, pages - 1);
-  const slice     = filtered.slice(safePage * LOG_PER_PAGE, safePage * LOG_PER_PAGE + LOG_PER_PAGE);
-
-  const handleFilter = (f) => { setLogFilter(f); setLogPage(0); };
-  const handleSearch = (v) => { setLogSearch(v); setLogPage(0); };
-
-  const pageNums = (() => {
-    const total = pages; const cur = safePage;
-    if (total <= 5) return Array.from({ length: total }, (_, i) => i);
-    const start = Math.max(0, Math.min(cur - 2, total - 5));
-    return Array.from({ length: 5 }, (_, i) => start + i);
-  })();
-
-  return (
-    <div className="ig-card" style={{ padding: 0, marginBottom: 20, overflow: "hidden" }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid var(--border)" }}>
-        <h3 className="syne" style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 7 }}>
-          📋 Activity Log
-        </h3>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, background: "rgba(34,197,94,0.12)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.25)", fontWeight: 600 }}>
-            {sentCount} sent
-          </span>
-          <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, background: "rgba(248,113,113,0.10)", color: "#f87171", border: "1px solid rgba(248,113,113,0.25)", fontWeight: 600 }}>
-            {failCount} failed
-          </span>
-        </div>
-      </div>
-
-      {/* Filter + search */}
-      <div className="log-filter-row">
-        {["all", "sent", "failed"].map(f => (
-          <button key={f} className={`log-f-btn${logFilter === f ? " active" : ""}`} onClick={() => handleFilter(f)}>
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
-        <div className="log-search">
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>🔍</span>
-          <input
-            type="text"
-            placeholder="Search user or keyword…"
-            value={logSearch}
-            onChange={e => handleSearch(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Column headers */}
-      <div className="log-table-hdr">
-        <span></span>
-        <span className="log-col-lbl">User</span>
-        <span className="log-col-lbl">Keyword</span>
-        <span className="log-col-lbl">Message</span>
-        <span className="log-col-lbl" style={{ textAlign: "right" }}>Time</span>
-        <span className="log-col-lbl" style={{ textAlign: "center" }}>✓</span>
-      </div>
-
-      {/* Rows */}
-      {slice.length === 0 ? (
-        <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>No entries match</div>
-      ) : (
-        slice.map((entry, i) => (
-          <div key={i} className="log-row">
-            <div className="log-avatar" style={{ background: avatarColor(entry.username) }}>
-              {initials(entry.username)}
-            </div>
-            <span className="log-uname">@{entry.username}</span>
-            <span>
-              {entry.keyword
-                ? <span className="log-kw-pill">{entry.keyword}</span>
-                : <span style={{ color: "var(--text-muted)", fontSize: 11 }}>—</span>}
-            </span>
-            <span className="log-msg-preview">{entry.message || "DM sent"}</span>
-            <span className="log-time">{entry.timeAgo}</span>
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <div className={`log-status-dot ${entry.status === "sent" ? "log-dot-sent" : "log-dot-fail"}`} />
-            </div>
-          </div>
-        ))
-      )}
-
-      {/* Footer / pagination */}
-      <div className="log-footer">
-        <span className="log-pg-info">
-          {filtered.length > 0
-            ? `${safePage * LOG_PER_PAGE + 1}–${Math.min(safePage * LOG_PER_PAGE + LOG_PER_PAGE, filtered.length)} of ${filtered.length}`
-            : "0 entries"}
-        </span>
-        <div className="log-pg-btns">
-          <button className="log-pg-btn" onClick={() => setLogPage(p => p - 1)} disabled={safePage === 0}>‹</button>
-          {pageNums.map(p => (
-            <button key={p} className={`log-pg-btn${p === safePage ? " cur" : ""}`} onClick={() => setLogPage(p)}>{p + 1}</button>
-          ))}
-          <button className="log-pg-btn" onClick={() => setLogPage(p => p + 1)} disabled={safePage >= pages - 1}>›</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ─── FollowToDmHint ───────────────────────────────────────────────── */
 function FollowToDmHint({ followReplyTemplate, onChangeTemplate }) {
   return (
@@ -687,8 +558,6 @@ export default function InstagramManager() {
 
   const [analytics, setAnalytics]           = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [activityLog, setActivityLog]       = useState([]);
-  const [logLoading, setLogLoading]         = useState(false);
 
   useEffect(() => {
     if (wrapRef.current) applyTheme(wrapRef.current, isDark ? "dark" : "light");
@@ -762,12 +631,6 @@ export default function InstagramManager() {
       .then((r) => setAnalytics(r.data))
       .catch(() => setAnalytics(null))
       .finally(() => setAnalyticsLoading(false));
-
-    setLogLoading(true);
-    api.get(`/insta/activity`, { params: { mediaId, limit: 10 } })
-      .then((r) => setActivityLog(r.data?.logs || []))
-      .catch(() => setActivityLog([]))
-      .finally(() => setLogLoading(false));
 
     api.get(`/insta/automation/${mediaId}/variants`)
       .then((r) => { if (r.data?.messages?.length) setMessageVariants(r.data.messages); })
@@ -948,8 +811,6 @@ export default function InstagramManager() {
                 <p style={{ color: "var(--text-primary)", lineHeight: 1.7, fontSize: 14 }}>{selectedPost.caption}</p>
               </div>
             )}
-
-            <ActivityLogSection log={activityLog} logLoading={logLoading} />
 
             {/* Auto Reply card */}
             <div className="ig-card" style={{ padding: 24, borderColor: "var(--border-accent)", marginBottom: 20 }}>
