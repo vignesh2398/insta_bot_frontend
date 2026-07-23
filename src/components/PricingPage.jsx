@@ -132,6 +132,13 @@ const PRICING_CSS = `
   .compare-check { color: #4ade80; font-size: 16px; }
   .compare-cross { color: var(--text-muted); font-size: 16px; opacity: 0.4; }
 
+  .pp-skel { position: relative; overflow: hidden; background: var(--surface); border-radius: 12px; }
+  .pp-skel::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--surface-hover), transparent); animation: pp-shimmer 1.4s infinite; }
+  @keyframes pp-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+  .pp-error-box { max-width: 520px; margin: 40px auto; padding: 24px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); text-align: center; color: var(--text-secondary); }
+  .pp-retry-btn { margin-top: 14px; padding: 9px 20px; border-radius: 50px; border: 1.5px solid var(--border); background: var(--surface-hover); color: var(--text-primary); font-weight: 600; font-size: 13px; cursor: pointer; }
+
   @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
   .fade-up { animation: fadeUp 0.4s ease forwards; }
   @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.8} }
@@ -148,119 +155,36 @@ if (!document.getElementById("pp-static-css")) {
   document.head.appendChild(s);
 }
 
-/* ─── Plan data ─────────────────────────────────────────────────────── */
-const PLANS = [
-  {
-    id: "free",
-    name: "Free",
-    tagline: "Get started with automation, no card needed.",
-    monthlyPrice: 0,
-    annualPrice: 0,
-    dmCap: "50 DMs / day",
-    dmCapClass: "free",
-    badge: { label: "Forever free", cls: "free-badge", icon: "🆓" },
-    features: [
-      { text: "50 automated DMs per day",  included: true,  highlight: true },
-      { text: "1 Instagram account",        included: true  },
-      { text: "Keyword trigger automation", included: true  },
-      { text: "Basic activity log",         included: true  },
-      { text: "Follow-to-DM flow",          included: false },
-      { text: "Message rotation",           included: false },
-      { text: "Analytics dashboard",        included: false },
-      { text: "Priority support",           included: false },
-    ],
-    cta: "Get started free",
-    ctaCls: "cta-outline",
-    featured: false,
-  },
-  {
-    id: "starter",
-    name: "Starter",
-    tagline: "For creators growing their audience.",
-    monthlyPrice: 19,
-    annualPrice: 15,
-    dmCap: "200 DMs / day",
-    dmCapClass: "starter",
-    badge: null,
-    features: [
-      { text: "200 automated DMs per day",  included: true,  highlight: true },
-      { text: "1 Instagram account",        included: true  },
-      { text: "Keyword trigger automation", included: true  },
-      { text: "Full activity log",          included: true  },
-      { text: "Follow-to-DM flow",          included: true  },
-      { text: "Message rotation",           included: false },
-      { text: "Analytics dashboard",        included: false },
-      { text: "Priority support",           included: false },
-    ],
-    cta: "Start Starter",
-    ctaCls: "cta-outline",
-    featured: false,
-  },
-  {
-    id: "growth",
-    name: "Growth",
-    tagline: "For brands ready to scale engagement.",
-    monthlyPrice: 49,
-    annualPrice: 39,
-    dmCap: "500 DMs / day",
-    dmCapClass: "growth",
-    badge: { label: "Most popular", cls: "popular", icon: "🔥" },
-    features: [
-      { text: "500 automated DMs per day",  included: true,  highlight: true },
-      { text: "3 Instagram accounts",       included: true  },
-      { text: "Keyword trigger automation", included: true  },
-      { text: "Full activity log",          included: true  },
-      { text: "Follow-to-DM flow",          included: true  },
-      { text: "Message rotation",           included: true  },
-      { text: "Analytics dashboard",        included: true  },
-      { text: "Priority support",           included: false },
-    ],
-    cta: "Start Growth",
-    ctaCls: "cta-gradient",
-    featured: true,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    tagline: "Unlimited power for serious businesses.",
-    monthlyPrice: 99,
-    annualPrice: 79,
-    dmCap: "Unlimited DMs",
-    dmCapClass: "pro",
-    badge: { label: "Best value", cls: "pro-badge", icon: "⚡" },
-    features: [
-      { text: "Unlimited automated DMs",    included: true,  highlight: true },
-      { text: "Unlimited accounts",         included: true  },
-      { text: "Keyword trigger automation", included: true  },
-      { text: "Full activity log",          included: true  },
-      { text: "Follow-to-DM flow",          included: true  },
-      { text: "Message rotation",           included: true  },
-      { text: "Analytics dashboard",        included: true  },
-      { text: "Priority support",           included: true  },
-    ],
-    cta: "Go Pro",
-    ctaCls: "cta-outline",
-    featured: false,
-  },
-];
-
-const FAQS = [
-  { q: "Can I upgrade or downgrade anytime?", a: "Yes — changes take effect at the start of your next billing cycle. If you upgrade mid-cycle, you'll only pay the prorated difference." },
-  { q: "What happens when I hit my daily DM cap?", a: "Automation pauses for the rest of that day and resumes automatically at midnight UTC. You'll see a warning in the dashboard when you're at 80% of your limit." },
-  { q: "Do unused DMs roll over?", a: "No — the cap resets daily. It's designed to keep sending patterns within Instagram's own guidelines." },
-  { q: "Is there a free trial on paid plans?", a: "Starter and Growth both include a 7-day free trial, no card required. Pro requires a card upfront but can be cancelled anytime in the first 14 days for a full refund." },
-  { q: "What payment methods do you accept?", a: "All major credit and debit cards via Stripe. Indian users can also pay via UPI and net banking." },
-];
-
-const COMPARE_ROWS = [
-  { feature: "Daily DM limit",         free: "50",   starter: "200",  growth: "500",   pro: "Unlimited" },
-  { feature: "Instagram accounts",     free: "1",    starter: "1",    growth: "3",     pro: "Unlimited" },
-  { feature: "Keyword triggers",       free: true,   starter: true,   growth: true,    pro: true },
-  { feature: "Follow-to-DM flow",      free: false,  starter: true,   growth: true,    pro: true },
-  { feature: "Message rotation",       free: false,  starter: false,  growth: true,    pro: true },
-  { feature: "Analytics dashboard",    free: false,  starter: false,  growth: true,    pro: true },
-  { feature: "Priority support",       free: false,  starter: false,  growth: false,   pro: true },
-];
+/*
+ * ─── Expected backend response shape (GET /billing/pricing) ──────────
+ * {
+ *   plans: [
+ *     {
+ *       id: "free",
+ *       name: "Free",
+ *       tagline: "Get started with automation, no card needed.",
+ *       monthlyPrice: 0,
+ *       annualPrice: 0,
+ *       dmCap: "50 DMs / day",
+ *       dmCapClass: "free",              // one of: free | starter | growth | pro
+ *       badge: { label: "Forever free", cls: "free-badge", icon: "🆓" } | null,
+ *       features: [
+ *         { text: "50 automated DMs per day", included: true, highlight: true },
+ *         ...
+ *       ],
+ *       cta: "Get started free",
+ *       ctaCls: "cta-outline",           // cta-outline | cta-gradient
+ *       featured: false
+ *     },
+ *     ...
+ *   ],
+ *   faqs: [ { q: "...", a: "..." }, ... ],
+ *   compareRows: [
+ *     { feature: "Daily DM limit", free: "50", starter: "200", growth: "500", pro: "Unlimited" },
+ *     ...
+ *   ]
+ * }
+ */
 
 /* ─── FAQ Item ──────────────────────────────────────────────────────── */
 function FaqItem({ q, a }) {
@@ -280,7 +204,7 @@ function FaqItem({ q, a }) {
 function PlanCard({ plan, annual, currentPlanId, onSelect, loading }) {
   const price      = annual ? plan.annualPrice : plan.monthlyPrice;
   const isCurrent  = currentPlanId === plan.id;
-  const isFree     = plan.id === "free";
+  const isFree     = plan.monthlyPrice === 0 && plan.annualPrice === 0;
   const isLoading  = loading === plan.id;
 
   let ctaCls = plan.ctaCls;
@@ -348,7 +272,7 @@ function PlanCard({ plan, annual, currentPlanId, onSelect, loading }) {
 }
 
 /* ─── Compare Table ─────────────────────────────────────────────────── */
-function CompareTable() {
+function CompareTable({ rows }) {
   const renderCell = (val) => {
     if (val === true)  return <span className="compare-check">✓</span>;
     if (val === false) return <span className="compare-cross">—</span>;
@@ -367,7 +291,7 @@ function CompareTable() {
           </tr>
         </thead>
         <tbody>
-          {COMPARE_ROWS.map((row, i) => (
+          {rows.map((row, i) => (
             <tr key={i}>
               <td>{row.feature}</td>
               <td>{renderCell(row.free)}</td>
@@ -382,22 +306,44 @@ function CompareTable() {
   );
 }
 
+/* ─── Skeleton loading state for plan cards ────────────────────────── */
+function PlanCardSkeleton() {
+  return (
+    <div className="plan-card">
+      <div className="pp-skel" style={{ width: 90, height: 20, marginBottom: 14, borderRadius: 20 }} />
+      <div className="pp-skel" style={{ width: "70%", height: 24, marginBottom: 8 }} />
+      <div className="pp-skel" style={{ width: "90%", height: 32, marginBottom: 20 }} />
+      <div className="pp-skel" style={{ width: "100%", height: 34, marginBottom: 20, borderRadius: 50 }} />
+      <div className="pp-skel" style={{ width: "50%", height: 40, marginBottom: 20 }} />
+      <div className="pp-skel" style={{ width: "100%", height: 160, marginBottom: 24 }} />
+      <div className="pp-skel" style={{ width: "100%", height: 44, borderRadius: 50 }} />
+    </div>
+  );
+}
+
 /* ─── Main PricingPage ──────────────────────────────────────────────── */
 export default function PricingPage() {
   const navigate       = useNavigate();
   const wrapRef        = useRef(null);
   const [isDark, setIsDark]           = useState(false);
   const [annual, setAnnual]           = useState(false);
-  const [currentPlanId, setCurrentPlanId] = useState("free");
+  const [currentPlanId, setCurrentPlanId] = useState(null);
   const [loading, setLoading]         = useState(null);   // plan id being processed
   const [showCompare, setShowCompare] = useState(false);
+
+  // Dynamic pricing data fetched from the backend
+  const [plans, setPlans]             = useState([]);
+  const [faqs, setFaqs]               = useState([]);
+  const [compareRows, setCompareRows] = useState([]);
+  const [pricingLoading, setPricingLoading] = useState(true);
+  const [pricingError, setPricingError]     = useState(null);
 
   /* Apply theme */
   useEffect(() => {
     if (wrapRef.current) applyTheme(wrapRef.current, isDark ? "dark" : "light");
   }, [isDark]);
 
-  /* Fetch current plan from API */
+  /* Fetch current plan / profile from API */
   useEffect(() => {
     api.get("/insta/profile")
       .then((res) => {
@@ -405,6 +351,27 @@ export default function PricingPage() {
         if (res.data?.plan) setCurrentPlanId(res.data.plan);
       })
       .catch(() => {});
+  }, []);
+
+  /* Fetch pricing data (plans, faqs, comparison table) from the backend */
+  const fetchPricing = () => {
+    setPricingLoading(true);
+    setPricingError(null);
+    api.get("/billing/pricing")
+      .then((res) => {
+        setPlans(res.data?.plans || []);
+        setFaqs(res.data?.faqs || []);
+        setCompareRows(res.data?.compareRows || []);
+      })
+      .catch((e) => {
+        console.error(e);
+        setPricingError("Could not load pricing plans. Please try again.");
+      })
+      .finally(() => setPricingLoading(false));
+  };
+
+  useEffect(() => {
+    fetchPricing();
   }, []);
 
   /* Add spin keyframe once */
@@ -417,12 +384,14 @@ export default function PricingPage() {
   }, []);
 
   const handleSelect = async (plan) => {
-    if (plan.id === "free") {
+    const isFree = plan.monthlyPrice === 0 && plan.annualPrice === 0;
+
+    if (isFree) {
       // Downgrade — just call API
       try {
         setLoading(plan.id);
-        await api.post("/billing/downgrade", { plan: "free" });
-        setCurrentPlanId("free");
+        await api.post("/billing/downgrade", { plan: plan.id });
+        setCurrentPlanId(plan.id);
       } catch (e) {
         console.error(e);
         alert("Could not change plan. Please try again.");
@@ -514,38 +483,49 @@ export default function PricingPage() {
         </div>
 
         {/* Plan cards */}
-        <div className="plan-grid">
-          {PLANS.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              annual={annual}
-              currentPlanId={currentPlanId}
-              onSelect={handleSelect}
-              loading={loading}
-            />
-          ))}
-        </div>
+        {pricingError ? (
+          <div className="pp-error-box">
+            <div>{pricingError}</div>
+            <button className="pp-retry-btn" onClick={fetchPricing}>Retry</button>
+          </div>
+        ) : (
+          <div className="plan-grid">
+            {pricingLoading
+              ? Array.from({ length: 4 }).map((_, i) => <PlanCardSkeleton key={i} />)
+              : plans.map((plan) => (
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    annual={annual}
+                    currentPlanId={currentPlanId}
+                    onSelect={handleSelect}
+                    loading={loading}
+                  />
+                ))}
+          </div>
+        )}
 
         {/* Compare toggle */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <button
-            onClick={() => setShowCompare((v) => !v)}
-            style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
-          >
-            {showCompare ? "Hide" : "Show"} full feature comparison
-            <span style={{ transition: "transform 0.25s", display: "inline-block", transform: showCompare ? "rotate(180deg)" : "none" }}>▾</span>
-          </button>
-        </div>
+        {!pricingLoading && !pricingError && compareRows.length > 0 && (
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <button
+              onClick={() => setShowCompare((v) => !v)}
+              style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              {showCompare ? "Hide" : "Show"} full feature comparison
+              <span style={{ transition: "transform 0.25s", display: "inline-block", transform: showCompare ? "rotate(180deg)" : "none" }}>▾</span>
+            </button>
+          </div>
+        )}
 
         {/* Compare table */}
-        {showCompare && (
+        {showCompare && compareRows.length > 0 && (
           <div style={{ maxWidth: 860, margin: "0 auto 56px", padding: "0 24px" }}>
             <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "24px 20px", backdropFilter: "blur(16px)" }}>
               <h2 className="syne" style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: "var(--text-primary)" }}>
                 Full comparison
               </h2>
-              <CompareTable />
+              <CompareTable rows={compareRows} />
             </div>
           </div>
         )}
@@ -567,12 +547,14 @@ export default function PricingPage() {
         </div>
 
         {/* FAQ */}
-        <div style={{ maxWidth: 680, margin: "0 auto 80px", padding: "0 24px" }}>
-          <h2 className="syne" style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, textAlign: "center", color: "var(--text-primary)" }}>
-            Common questions
-          </h2>
-          {FAQS.map((f, i) => <FaqItem key={i} {...f} />)}
-        </div>
+        {faqs.length > 0 && (
+          <div style={{ maxWidth: 680, margin: "0 auto 80px", padding: "0 24px" }}>
+            <h2 className="syne" style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, textAlign: "center", color: "var(--text-primary)" }}>
+              Common questions
+            </h2>
+            {faqs.map((f, i) => <FaqItem key={i} {...f} />)}
+          </div>
+        )}
 
       </div>
     </div>
