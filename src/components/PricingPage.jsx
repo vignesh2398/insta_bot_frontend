@@ -401,22 +401,72 @@ export default function PricingPage() {
       return;
     }
 
-    // Paid plan → create Stripe checkout session
+    // Paid plan → create Razorpay order for the selected plan
     try {
       setLoading(plan.id);
-      const res = await api.post("/billing/checkout", {
-        plan: plan.id,
-        billing: annual ? "annual" : "monthly",
-      });
-      // Redirect to Stripe Checkout URL returned by your backend
-      if (res.data?.url) {
-        window.location.href = res.data.url;
-      } else {
-        throw new Error("No checkout URL returned");
+
+      if (!document.getElementById("razorpay-script")) {
+        const script = document.createElement("script");
+        script.id = "razorpay-script";
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        document.body.appendChild(script);
       }
+
+      const amount = Math.round((annual ? plan.annualPrice : plan.monthlyPrice) * 100);
+      const receipt = `${plan.id}-${annual ? "annual" : "monthly"}`;
+
+      const order = await api.post("/create-order", {
+        amount,
+        currency: "INR",
+        receipt,
+      });
+
+      if (!window.Razorpay) {
+        throw new Error("Razorpay SDK is not loaded yet.");
+      }
+
+      const options = {
+        key: order.data?.key || "YOUR_KEY_ID",
+        amount: order.data?.amount || amount,
+        currency: order.data?.currency || "INR",
+        order_id: order.data?.order_id || order.data?.id,
+        name: "Insta Bot",
+        description: `Upgrade to ${plan.name}`,
+        handler: async function (response) {
+          try {
+            const verifyRes = await api.post("/verify-payment", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyRes.data?.success) {
+              alert("Payment verified successfully");
+            } else {
+              alert(verifyRes.data?.error || "Payment verification failed");
+            }
+          } catch (verifyError) {
+            console.error(verifyError);
+            alert("Payment verification failed");
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            alert("Payment cancelled");
+          },
+        },
+        theme: {
+          color: "#ff4d6d",
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
     } catch (e) {
       console.error(e);
       alert("Could not start checkout. Please try again.");
+    } finally {
       setLoading(null);
     }
   };
